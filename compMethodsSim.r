@@ -105,7 +105,7 @@ simulate_multi_state <- function(n, time_max) {
       u <- runif(1)
       prob_transitions <- cumsum(Q[current_state, ] / -Q[current_state,
                                                          current_state])
-      next_state <- sum(u > prob_transitions)
+      next_state <- sum(u > prob_transitions) 
       
       current_state <- next_state
     }
@@ -119,8 +119,14 @@ n_individuals <- 2000
 n_states <- 3
 
 # Define the transition intensity matrix
-Q <- matrix(c(-0.1, 0.1, 0, 0, -0.2, 0.2, 0, 0, -0.05), nrow = n_states,
-            byrow = TRUE)
+lambda_1 <- 0.1
+lambda_1_to_2 <- 0.05
+lambda_2 <- 0.2
+mu_2 <- 0.1
+mu_3 <- 0.05
+
+# Create the Q matrix
+Q <- matrix(c(-0.1, 0.1, 0, 0, -0.2, 0.2, 0, 0, -0.05), nrow = n_states, byrow = TRUE)
 
 # Simulate data
 sim_data <- simulate_multi_state(n = n_individuals, time_max = 10)
