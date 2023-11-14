@@ -19,7 +19,7 @@
 ##     * Patient ID (DONE)                                                  ##
 ##.    * Gender (DONE)                                                      ##
 ##.    * Year of birth (DONE)                                               ##
-##.    * Socioeconomic status                                               ##
+##.    * Socioeconomic status (DONE)                                        ##
 ##.    * Region                                                             ##
 ##.    * Event info                                                         ##
 ##############################################################################
@@ -65,6 +65,12 @@ for (i in 1:length(patid)){
 
 ses <- as.list(sample(c(1,2,3,4,5), size = length(patid), replace = TRUE, 
               prob = c(0.2,0.2,0.2,0.2,0.2)))
+
+############ Region ##################
+# 10 SHA and then Wales, NI, Scot
+
+region <- as.list(sample(seq(1,13,1), size = length(patid), replace = TRUE))
+
 
 
 
