@@ -10,6 +10,18 @@
 ## Person                |   Date    | Changes Made                         ##
 ## _________________________________________________________________________##
 ## Chantelle Cornett     | 12NOV2023 | File initialisation                  ##
+##                       | 14NOV2023 | First simulation                     ##
+##############################################################################
+
+##############################################################################
+## To Do:                                                                   ##
+## * Simulate patient information                                           ##
+##     * Patient ID                                                         ##
+##.    * Gender                                                             ##
+##.    * Year of birth                                                      ##
+##.    * Socioeconomic status                                               ##
+##.    * Region                                                             ##
+##.    * Event info                                                         ##
 ##############################################################################
 
 ######################################
@@ -20,14 +32,5 @@
 install.packages("mstate")
 install.packages("gems")
 library("mstate")
-library("mstate")
 
-set.seed(123)
-tmat <- mstate::transMat(x = list(c(1,2,3), 
-                         c(2,3), 
-                         c()),
-                       names = c("Healthy", "Unwell", "Death"))
-print(tmat)
 
-id <- seq(1,100,1)
-srt_ages <- rnorm(10, mean = 40, sd = 15)
