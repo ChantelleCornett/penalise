@@ -88,8 +88,9 @@ simulate_multi_state <- function(n, time_max) {
     
     while (t < time_max) {
       # Generate time until the next event
+
       delta_t <- rexp(1, rate = -Q[current_state, current_state])
-      
+
       # Update time and state
       t <- t + delta_t
       time[i] <- t
@@ -104,7 +105,7 @@ simulate_multi_state <- function(n, time_max) {
       u <- runif(1)
       prob_transitions <- cumsum(Q[current_state, ] / -Q[current_state,
                                                          current_state])
-      next_state <- sum(u > prob_transitions) + 1
+      next_state <- sum(u > prob_transitions)
       
       current_state <- next_state
     }
@@ -124,7 +125,7 @@ Q <- matrix(c(-0.1, 0.1, 0, 0, -0.2, 0.2, 0, 0, -0.05), nrow = n_states,
 # Simulate data
 sim_data <- simulate_multi_state(n = n_individuals, time_max = 10)
 
-# Plot the simulated data
+# Plot the simulated dataß
 plot(sim_data$time, sim_data$state, type = 's', col = 'blue', xlab = 'Time',
      ylab = 'State',
      main = 'Simulated Multi-State Illness-Death Model')
