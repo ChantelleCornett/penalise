@@ -16,9 +16,9 @@
 ##############################################################################
 ## To Do:                                                                   ##
 ## * Simulate patient information                                           ##
-##     * Patient ID                                                         ##
-##.    * Gender                                                             ##
-##.    * Year of birth                                                      ##
+##     * Patient ID (DONE)                                                  ##
+##.    * Gender (DONE)                                                      ##
+##.    * Year of birth (DONE)                                               ##
 ##.    * Socioeconomic status                                               ##
 ##.    * Region                                                             ##
 ##.    * Event info                                                         ##
@@ -51,5 +51,20 @@ for (i in 1:length(patid)){
 }
 
 ######## Year of Birth ###############
+
+yob <- list()
+for (i in 1:length(patid)){
+  u <- 0
+  while(u < 1 | u > 100){
+    u <- rnorm(1, mean = 46, sd = 14)
+  } 
+  yob[i] <- 2023 - round(u, digits=0)
+}
+
+############ SES #####################
+
+ses <- as.list(sample(c(1,2,3,4,5), size = length(patid), replace = TRUE, 
+              prob = c(0.2,0.2,0.2,0.2,0.2)))
+
 
 
