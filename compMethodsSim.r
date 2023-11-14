@@ -33,4 +33,23 @@ install.packages("mstate")
 install.packages("gems")
 library("mstate")
 
+########## Patient ID ################
+
+patid <- seq(1,2000,1)
+
+############# Gender #################
+
+gender <- list()
+for (i in 1:length(patid)){
+  u <- runif(1)
+  if (u < 0.5){
+    gender[i] <- 0
+  } 
+  else{
+    gender[i] <- 1
+  }
+}
+
+######## Year of Birth ###############
+
 
