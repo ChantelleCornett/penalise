@@ -10,129 +10,146 @@
 ## Person                |   Date    | Changes Made                         ##
 ## _________________________________________________________________________##
 ## Chantelle Cornett     | 12NOV2023 | File initialisation                  ##
-##                       | 14NOV2023 | First simulation                     ##
+##                       | 14NOV2023 | First simulation                     ## 
+##                       | 16NOV2023 | Using Alex's code                    ##
 ##############################################################################
 
-##############################################################################
-## To Do:                                                                   ##
-## * Simulate patient information                                           ##
-##     * Patient ID (DONE)                                                  ##
-##.    * Gender (DONE)                                                      ##
-##.    * Year of birth (DONE)                                               ##
-##.    * Socioeconomic status (DONE)                                        ##
-##.    * Region (DONE)                                                      ##
-##.    * Event info (date, type)                                            ##
-##############################################################################
+
 
 ######################################
 ##          DATA SIMULATION         ##
 ######################################
 
-# Install and load the mstate package
-install.packages("mstate")
-install.packages("gems")
-library("mstate")
+### Load packages
+source("z_functions.R")
+source("z_functions_true_transition_probs.R")
+source("z_load_packages.R")
 
-########## Patient ID ################
+### Choose cohort size
+n.cohort <- 200000
 
-patid <- seq(1,2000,1)
+### Calculate the scale for each p, taken from Putter et al 2006, Estimation and prediction in a multistate model for breast cancer, Figure 2
+csh.survival.probs.desired <- c("12" = 0.2, "13" = 0.05, "23" = 0.6)
 
-############# Gender #################
+### Apply function to calculate the desired scales
+scales.sim <- sapply(csh.survival.probs.desired, calc.scale)
+scales.sim
 
-gender <- list()
-for (i in 1:length(patid)){
-  u <- runif(1)
-  if (u < 0.5){
-    gender[i] <- 0
-  } 
-  else{
-    gender[i] <- 1
-  }
+### Defne the max follow up to be 1 day after 10 years
+max.follow <- ceiling(10*365.25) + 1
+
+### Generate the data, but paralellise the process to improve speed (note I could move to CSF at a later date if this process is highly time consuming,
+### but at the moment I think other things require the CSF more (fitting the actual multistate models))
+print("START DATA GEN")
+cl <- makeCluster(5)
+registerDoParallel(5)
+start_time_fit_parallel <- Sys.time()
+data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE, 
+                             .packages=c("gems", "dplyr")) %dopar%{
+                               ## Set seed
+                               set.seed(input)
+                               
+                               ## Generate baseline data
+                               x.baseline <- data.frame("x1" = rnorm(n.cohort, 0, 1), "x2" = rnorm(n.cohort, 0, 1))
+                               
+                               ## Generate data
+                               data.out <- gen.dat.DGM1(n = n.cohort, #number of patients to simulate
+                                                        max.follow = max.follow, #max follow up, informative censoring 1 day after 7 years
+                                                        shape12 = 1, scale12 = scales.sim["12"], #shape and scale for weibull baseline hazard for transition 1 -> 2
+                                                        shape13 = 1, scale13 = scales.sim["13"], #shape and scale for weibull baseline hazard for transition 1 -> 3
+                                                        shape15 = 1, scale15 = scales.sim["15"], #shape and scale for weibull baseline hazard for transition 1 -> 5
+                                                        shape24 = 1, scale24 = scales.sim["24"], #shape and scale for weibull baseline hazard for transition 2 -> 4
+                                                        shape25 = 1, scale25 = scales.sim["25"], #shape and scale for weibull baseline hazard for transition 2 -> 5
+                                                        shape34 = 1, scale34 = scales.sim["34"], #shape and scale for weibull baseline hazard for transition 3 -> 4
+                                                        shape35 = 1, scale35 = scales.sim["35"], #shape and scale for weibull baseline hazard for transition 3 -> 5
+                                                        shape45 = 1, scale45 = scales.sim["45"], #shape and scale for weibull baseline hazard for transition 3 -> 5
+                                                        beta12.x1 = 0.5, beta12.x2 = -0.5, #covariate effects for transiion 12
+                                                        beta13.x1 = 0.5, beta13.x2 = -0.5, #covariate effects for transiion 13
+                                                        beta15.x1 = 0.5, beta15.x2 = -0.5, #covariate effects for transiion 15
+                                                        beta24.x1 = 0.5, beta24.x2 = -0.5, #covariate effects for transiion 24
+                                                        beta25.x1 = 0.5, beta25.x2 = -0.5, #covariate effects for transiion 25
+                                                        beta34.x1 = 0.5, beta34.x2 = -0.5, #covariate effects for transiion 34
+                                                        beta35.x1 = 0.5, beta35.x2 = -0.5, #covariate effects for transiion 35
+                                                        beta45.x1 = 0.5, beta45.x2 = -0.5, #covariate effects for transiion 45
+                                                        x.in = x.baseline, #baseline predictors, dataframe with two columns (x1 continuous, x2 binary)
+                                                        numsteps = max.follow)
+                               
+                               ## Return data
+                               data.out
+                             })
+end_time_fit_parallel <- Sys.time()
+diff_fit_parallel <- start_time_fit_parallel - end_time_fit_parallel
+stopCluster(cl)
+print("FINISH DATA GEN")
+diff_fit_parallel
+
+
+
+###
+### Calculate true transition probabilities for each individual
+###
+
+### Write a function to it for a single individual
+print(paste("CALC TRUE RISKS ", Sys.time(), sep = ""))
+calc.true.tp.ind <- function(row){
+  return(calc.true.transition.probs.DGM1(0, ceiling(7*365.25), row[1], row[2],
+                                         shape12 = 1, scale12 = scales.sim["12"], #shape and scale for weibull baseline hazard for transition 1 -> 2
+                                         shape13 = 1, scale13 = scales.sim["13"], #shape and scale for weibull baseline hazard for transition 1 -> 3
+                                         shape15 = 1, scale15 = scales.sim["15"], #shape and scale for weibull baseline hazard for transition 1 -> 5
+                                         shape24 = 1, scale24 = scales.sim["24"], #shape and scale for weibull baseline hazard for transition 2 -> 4
+                                         shape25 = 1, scale25 = scales.sim["25"], #shape and scale for weibull baseline hazard for transition 2 -> 5
+                                         shape34 = 1, scale34 = scales.sim["34"], #shape and scale for weibull baseline hazard for transition 3 -> 4
+                                         shape35 = 1, scale35 = scales.sim["35"], #shape and scale for weibull baseline hazard for transition 3 -> 5
+                                         shape45 = 1, scale45 = scales.sim["45"], #shape and scale for weibull baseline hazard for transition 3 -> 5
+                                         beta12.x1 = 0.5, beta12.x2 = -0.5, #covariate effects for transiion 12
+                                         beta13.x1 = 0.5, beta13.x2 = -0.5, #covariate effects for transiion 13
+                                         beta15.x1 = 0.5, beta15.x2 = -0.5, #covariate effects for transiion 15
+                                         beta24.x1 = 0.5, beta24.x2 = -0.5, #covariate effects for transiion 24
+                                         beta25.x1 = 0.5, beta25.x2 = -0.5, #covariate effects for transiion 25
+                                         beta34.x1 = 0.5, beta34.x2 = -0.5, #covariate effects for transiion 34
+                                         beta35.x1 = 0.5, beta35.x2 = -0.5, #covariate effects for transiion 35
+                                         beta45.x1 = 0.5, beta45.x2 = -0.5 #covariate effects for transiion 45
+  ))
 }
 
-######## Year of Birth ###############
+print("START CALC TRUE RISKS")
+cl <- makeCluster(5)
+registerDoParallel(5)
+start_time_ctr_parallel <- Sys.time()
+p.true_parallel_list<-(foreach(input=data_parallel_list, .combine=list, .multicombine=TRUE, 
+                               .packages=c("gems", "dplyr")) %dopar%{
+                                 
+                                 ### Calc true risk for each individual in this dataset
+                                 p.true <- apply(select(input[["cohort"]], x1, x2), 1, calc.true.tp.ind)
+                                 p.true <- data.frame(t(p.true))
+                                 colnames(p.true) <- paste("p.true", 1:5, sep = "")
+                                 print(paste("FINISH TRUE RISKS ", Sys.time(), sep = ""))
+                                 
+                                 ## Return data
+                                 p.true
+                               })
+end_time_ctr_parallel <- Sys.time()
+diff_ctr_parallel <- start_time_ctr_parallel - end_time_ctr_parallel
+stopCluster(cl)
+print("FINISH CALC TRUE RISKS")
+diff_ctr_parallel
 
-yob <- list()
-for (i in 1:length(patid)){
-  u <- 0
-  while(u < 1 | u > 100){
-    u <- rnorm(1, mean = 46, sd = 14)
-  } 
-  yob[i] <- 2023 - round(u, digits=0)
-}
 
-############ SES #####################
+### Combine data into one data frame
+temp.data.cohort <- do.call(rbind, lapply(data_parallel_list, function(x) {x[[1]]}))
+temp.data.p.true <- do.call(rbind, p.true_parallel_list)
 
-ses <- as.list(sample(c(1,2,3,4,5), size = length(patid), replace = TRUE, 
-              prob = c(0.2,0.2,0.2,0.2,0.2)))
+### Assign patient ID's and remove rownames
+temp.data.cohort$patid <- 1:nrow(temp.data.cohort)
+rownames(temp.data.cohort) <- NULL
+rownames(temp.data.p.true) <- NULL
 
-############ Region ##################
-# 10 SHA and then Wales, NI, Scot
+### Combine
+temp.data <- cbind(temp.data.cohort, temp.data.p.true)
 
-region <- as.list(sample(seq(1,13,1), size = length(patid), replace = TRUE))
+### Put into an oject that can be uesd by subsequent functions that convert into mstate form
+data.pop <- list("cohort" = temp.data, "max.follow" = max.follow)
 
-
-########### Events ##################
-
-# Set the seed for reproducibility
-set.seed(123)
-
-# Function to simulate a multi-state illness-death model
-simulate_multi_state <- function(n, time_max) {
-  time <- rep(NA, n)
-  state <- rep(NA, n)
-  
-  for (i in 1:n) {
-    t <- 0
-    current_state <- 1  # Start in state 1 (e.g., Healthy)
-    
-    while (t < time_max) {
-      # Generate time until the next event
-
-      delta_t <- rexp(1, rate = -Q[current_state, current_state])
-
-      # Update time and state
-      t <- t + delta_t
-      time[i] <- t
-      state[i] <- current_state
-      
-      # Check for death event
-      if (current_state == n_states) {
-        break
-      }
-      
-      # Generate next state
-      u <- runif(1)
-      prob_transitions <- cumsum(Q[current_state, ] / -Q[current_state,
-                                                         current_state])
-      next_state <- sum(u > prob_transitions) 
-      
-      current_state <- next_state
-    }
-  }
-  
-  return(data.frame(time = time, state = state))
-}
-
-# Define the number of individuals and number of states
-n_individuals <- 2000
-n_states <- 3
-
-# Define the transition intensity matrix
-lambda_1 <- 0.1
-lambda_1_to_2 <- 0.05
-lambda_2 <- 0.2
-mu_2 <- 0.1
-mu_3 <- 0.05
-
-# Create the Q matrix
-Q <- matrix(c(-0.1, 0.1, 0, 0, -0.2, 0.2, 0, 0, -0.05), nrow = n_states, byrow = TRUE)
-
-# Simulate data
-sim_data <- simulate_multi_state(n = n_individuals, time_max = 10)
-
-# Plot the simulated dataß
-plot(sim_data$time, sim_data$state, type = 's', col = 'blue', xlab = 'Time',
-     ylab = 'State',
-     main = 'Simulated Multi-State Illness-Death Model')
-
+### Save workspace
+rm(list=setdiff(ls(), list("data.pop", "scales.sim")))
+save.image("data/generate_population_data_DGM1.RData")
