@@ -91,5 +91,16 @@ msdat <-
     status = c(NA, "illstat", "deathstat")
   )
 
+# Adding in covariates
 
+agecat <- c("<=20","20-40",">40")
+id <- as.data.frame(seq(1,100,1))
+gender <- c(0,1)
+
+# ages
+ages <- as.data.frame(sample(agecat, 100, replace = TRUE, prob = c(0.332,0.531,0.137 )))
+genders <- as.data.frame(sample(gender, 100, replace = TRUE, prob = c(0.5,0.5)))
+agedat <- cbind(id, ages, genders)
+colnames(agedat) <- c("subject","ages","genders")
+msdat <- merge(msdat, agedat, by = c("subject"))
 save(msdat, file = "msdat.Rdata")

@@ -12,3 +12,19 @@
 ## _________________________________________________________________________##
 ## Chantelle Cornett     | 19NOV2023 | File initialisation                  ##
 ##############################################################################
+
+library(mstate)
+
+###################################
+##.     MLE NO SHRINKAGE         ##
+###################################
+
+# make a cox proportional hazards model with multiple outcomes
+noShrinkSimp <- coxph(Surv(Tstart, Tstop, status) ~ strata(trans) + genders*factor(trans) + ages*factor(trans),
+      data = msdat,
+      method = "breslow")
+
+###################################
+##     UNIFORM SHRINKAGE         ##
+###################################
+
