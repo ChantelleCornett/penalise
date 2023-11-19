@@ -10,8 +10,9 @@
 ## Person                |   Date    | Changes Made                         ##
 ## _________________________________________________________________________##
 ## Chantelle Cornett     | 12NOV2023 | File initialisation                  ##
-##                       | 14NOV2023 | First simulation                     ## 
+##                       | 14NOV2023 | First simulation                     ##
 ##                       | 16NOV2023 | Using Alex's code                    ##
+##                       | 19NOV2023 | Using MSM to simulate data.          ##
 ##############################################################################
 
 
@@ -19,137 +20,72 @@
 ######################################
 ##          DATA SIMULATION         ##
 ######################################
+library("msm")
+library("doBy")
+library("tidyr")
 
-### Load packages
-source("z_functions.R")
-source("z_functions_true_transition_probs.R")
-source("z_load_packages.R")
+# Transition matrix
 
-### Choose cohort size
-n.cohort <- 200000
+tmat <- trans.illdeath()
 
-### Calculate the scale for each p, taken from Putter et al 2006, Estimation and prediction in a multistate model for breast cancer, Figure 2
-csh.survival.probs.desired <- c("12" = 0.2, "13" = 0.05, "23" = 0.6)
+# need to simulate event times for 100 people
 
-### Apply function to calculate the desired scales
-scales.sim <- sapply(csh.survival.probs.desired, calc.scale)
-scales.sim
+sim.df <-
+  data.frame(subject = rep(1:100, rep(13, 100)), time = rexp(100, 0.2)) %>% arrange(subject, time)
 
-### Defne the max follow up to be 1 day after 10 years
-max.follow <- ceiling(10*365.25) + 1
+# Transition rates
+lambda_h_i = 0.02  # Transition rate from healthy to illness
+mu_i_d = 0.01      # Transition rate from illness to death
 
-### Generate the data, but paralellise the process to improve speed (note I could move to CSF at a later date if this process is highly time consuming,
-### but at the moment I think other things require the CSF more (fitting the actual multistate models))
-print("START DATA GEN")
-cl <- makeCluster(5)
-registerDoParallel(5)
-start_time_fit_parallel <- Sys.time()
-data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE, 
-                             .packages=c("gems", "dplyr")) %dopar%{
-                               ## Set seed
-                               set.seed(input)
-                               
-                               ## Generate baseline data
-                               x.baseline <- data.frame("x1" = rnorm(n.cohort, 0, 1), "x2" = rnorm(n.cohort, 0, 1))
-                               
-                               ## Generate data
-                               data.out <- gen.dat.DGM1(n = n.cohort, #number of patients to simulate
-                                                        max.follow = max.follow, #max follow up, informative censoring 1 day after 7 years
-                                                        shape12 = 1, scale12 = scales.sim["12"], #shape and scale for weibull baseline hazard for transition 1 -> 2
-                                                        shape13 = 1, scale13 = scales.sim["13"], #shape and scale for weibull baseline hazard for transition 1 -> 3
-                                                        shape15 = 1, scale15 = scales.sim["15"], #shape and scale for weibull baseline hazard for transition 1 -> 5
-                                                        shape24 = 1, scale24 = scales.sim["24"], #shape and scale for weibull baseline hazard for transition 2 -> 4
-                                                        shape25 = 1, scale25 = scales.sim["25"], #shape and scale for weibull baseline hazard for transition 2 -> 5
-                                                        shape34 = 1, scale34 = scales.sim["34"], #shape and scale for weibull baseline hazard for transition 3 -> 4
-                                                        shape35 = 1, scale35 = scales.sim["35"], #shape and scale for weibull baseline hazard for transition 3 -> 5
-                                                        shape45 = 1, scale45 = scales.sim["45"], #shape and scale for weibull baseline hazard for transition 3 -> 5
-                                                        beta12.x1 = 0.5, beta12.x2 = -0.5, #covariate effects for transiion 12
-                                                        beta13.x1 = 0.5, beta13.x2 = -0.5, #covariate effects for transiion 13
-                                                        beta15.x1 = 0.5, beta15.x2 = -0.5, #covariate effects for transiion 15
-                                                        beta24.x1 = 0.5, beta24.x2 = -0.5, #covariate effects for transiion 24
-                                                        beta25.x1 = 0.5, beta25.x2 = -0.5, #covariate effects for transiion 25
-                                                        beta34.x1 = 0.5, beta34.x2 = -0.5, #covariate effects for transiion 34
-                                                        beta35.x1 = 0.5, beta35.x2 = -0.5, #covariate effects for transiion 35
-                                                        beta45.x1 = 0.5, beta45.x2 = -0.5, #covariate effects for transiion 45
-                                                        x.in = x.baseline, #baseline predictors, dataframe with two columns (x1 continuous, x2 binary)
-                                                        numsteps = max.follow)
-                               
-                               ## Return data
-                               data.out
-                             })
-end_time_fit_parallel <- Sys.time()
-diff_fit_parallel <- start_time_fit_parallel - end_time_fit_parallel
-stopCluster(cl)
-print("FINISH DATA GEN")
-diff_fit_parallel
+# Q-matrix
+qmatrix <- matrix(
+  c(-lambda_h_i, lambda_h_i, 0,
+    0,-mu_i_d, mu_i_d,
+    0, 0, 0),
+  nrow = 3,
+  byrow = TRUE
+)
 
+df <- simmulti.msm(sim.df, qmatrix, death = c(3))
 
+df2 <- summaryBy(time ~ subject + state, FUN = c(sum), data = df)
 
-###
-### Calculate true transition probabilities for each individual
-###
+# Getting data into same format as ebmt3
 
-### Write a function to it for a single individual
-print(paste("CALC TRUE RISKS ", Sys.time(), sep = ""))
-calc.true.tp.ind <- function(row){
-  return(calc.true.transition.probs.DGM1(0, ceiling(7*365.25), row[1], row[2],
-                                         shape12 = 1, scale12 = scales.sim["12"], #shape and scale for weibull baseline hazard for transition 1 -> 2
-                                         shape13 = 1, scale13 = scales.sim["13"], #shape and scale for weibull baseline hazard for transition 1 -> 3
-                                         shape15 = 1, scale15 = scales.sim["15"], #shape and scale for weibull baseline hazard for transition 1 -> 5
-                                         shape24 = 1, scale24 = scales.sim["24"], #shape and scale for weibull baseline hazard for transition 2 -> 4
-                                         shape25 = 1, scale25 = scales.sim["25"], #shape and scale for weibull baseline hazard for transition 2 -> 5
-                                         shape34 = 1, scale34 = scales.sim["34"], #shape and scale for weibull baseline hazard for transition 3 -> 4
-                                         shape35 = 1, scale35 = scales.sim["35"], #shape and scale for weibull baseline hazard for transition 3 -> 5
-                                         shape45 = 1, scale45 = scales.sim["45"], #shape and scale for weibull baseline hazard for transition 3 -> 5
-                                         beta12.x1 = 0.5, beta12.x2 = -0.5, #covariate effects for transiion 12
-                                         beta13.x1 = 0.5, beta13.x2 = -0.5, #covariate effects for transiion 13
-                                         beta15.x1 = 0.5, beta15.x2 = -0.5, #covariate effects for transiion 15
-                                         beta24.x1 = 0.5, beta24.x2 = -0.5, #covariate effects for transiion 24
-                                         beta25.x1 = 0.5, beta25.x2 = -0.5, #covariate effects for transiion 25
-                                         beta34.x1 = 0.5, beta34.x2 = -0.5, #covariate effects for transiion 34
-                                         beta35.x1 = 0.5, beta35.x2 = -0.5, #covariate effects for transiion 35
-                                         beta45.x1 = 0.5, beta45.x2 = -0.5 #covariate effects for transiion 45
-  ))
+df3 <-
+  pivot_wider(df2, names_from = state, values_from = c(time.sum)) # transpose
+df3 <-
+  df3[, !(names(df3) %in% c('3'))] # remove 'time' spent in state 3
+df3$'2' <- df3$'2'+df3$'1' # cumulative time to state 3
+colnames(df3) <- c('subject', 'timeToIll', 'timeToDeath')
+df3$timeToDeath <-
+  replace_na(df3$timeToDeath, replace = 200) # set missing vals to a large number
+
+# create indicator variables for transitions to state 2 and 3
+counts <- as.data.frame(table(df2$subject))
+colnames(counts) <- c("subject", "count")
+df4 <- merge(df3, counts, by = c("subject"))
+
+for (i in 1:length(df4$subject)) {
+  if (df4$count[i] == 1) {
+    df4$illstat[i] <- 0
+    df4$deathstat[i] <- 0
+  } else if (df4$count[i] == 2) {
+    df4$illstat[i] <- 1
+    df4$deathstat[i] <- 0
+  } else if (df4$count[i] == 3) {
+    df4$illstat[i] <- 1
+    df4$deathstat[i] <- 1
+  }
 }
 
-print("START CALC TRUE RISKS")
-cl <- makeCluster(5)
-registerDoParallel(5)
-start_time_ctr_parallel <- Sys.time()
-p.true_parallel_list<-(foreach(input=data_parallel_list, .combine=list, .multicombine=TRUE, 
-                               .packages=c("gems", "dplyr")) %dopar%{
-                                 
-                                 ### Calc true risk for each individual in this dataset
-                                 p.true <- apply(select(input[["cohort"]], x1, x2), 1, calc.true.tp.ind)
-                                 p.true <- data.frame(t(p.true))
-                                 colnames(p.true) <- paste("p.true", 1:5, sep = "")
-                                 print(paste("FINISH TRUE RISKS ", Sys.time(), sep = ""))
-                                 
-                                 ## Return data
-                                 p.true
-                               })
-end_time_ctr_parallel <- Sys.time()
-diff_ctr_parallel <- start_time_ctr_parallel - end_time_ctr_parallel
-stopCluster(cl)
-print("FINISH CALC TRUE RISKS")
-diff_ctr_parallel
+# Get data in format suitable for use by mstate
 
-
-### Combine data into one data frame
-temp.data.cohort <- do.call(rbind, lapply(data_parallel_list, function(x) {x[[1]]}))
-temp.data.p.true <- do.call(rbind, p.true_parallel_list)
-
-### Assign patient ID's and remove rownames
-temp.data.cohort$patid <- 1:nrow(temp.data.cohort)
-rownames(temp.data.cohort) <- NULL
-rownames(temp.data.p.true) <- NULL
-
-### Combine
-temp.data <- cbind(temp.data.cohort, temp.data.p.true)
-
-### Put into an oject that can be uesd by subsequent functions that convert into mstate form
-data.pop <- list("cohort" = temp.data, "max.follow" = max.follow)
-
-### Save workspace
-rm(list=setdiff(ls(), list("data.pop", "scales.sim")))
-save.image("data/generate_population_data_DGM1.RData")
+msdat <-
+  msprep(
+    data = df4,
+    id = "subject",
+    time = c(NA, "timeToIll", "timeToDeath"),
+    trans = tmat,
+    status = c(NA, "illstat", "deathstat")
+  )

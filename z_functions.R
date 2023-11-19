@@ -742,22 +742,10 @@ gen.dat.DGM2 <- function(n, #number of patients to simulate
                          max.follow, #maximum follow up
                          shape12, scale12, #shape and scale for weibull baseline hazard for transition 1 -> 2
                          shape13, scale13, #shape and scale for weibull baseline hazard for transition 1 -> 3
-                         shape16, scale16, #shape and scale for weibull baseline hazard for transition 1 -> 6
-                         shape24, scale24, #shape and scale for weibull baseline hazard for transition 2 -> 4
-                         shape26, scale26, #shape and scale for weibull baseline hazard for transition 2 -> 6
-                         shape35, scale35, #shape and scale for weibull baseline hazard for transition 3 -> 5
-                         shape36, scale36, #shape and scale for weibull baseline hazard for transition 3 -> 6
-                         shape46, scale46, #shape and scale for weibull baseline hazard for transition 4 -> 6
-                         shape56, scale56, #shape and scale for weibull baseline hazard for transition 5 -> 6
+                         shape23, scale23, #shape and scale for weibull baseline hazard for transition 2 -> 3
                          beta12.x1, beta12.x2, #covariate effects for transiion 1 -> 2
                          beta13.x1, beta13.x2, #covariate effects for transiion 1 -> 3
-                         beta16.x1, beta16.x2, #covariate effects for transiion 1 -> 6
-                         beta24.x1, beta24.x2, #covariate effects for transiion 2 -> 4
-                         beta26.x1, beta26.x2, #covariate effects for transiion 2 -> 6
-                         beta35.x1, beta35.x2, #covariate effects for transiion 3 -> 5
-                         beta36.x1, beta36.x2, #covariate effects for transiion 3 -> 6
-                         beta46.x1, beta46.x2, #covariate effects for transiion 4 -> 6
-                         beta56.x1, beta56.x2, #covariate effects for transiion 5 -> 6
+                         beta23.x1, beta23.x2, #covariate effects for transiion 2 -> 3
                          x.in, #baseline predictors, dataframe with two columns (x1 continuous, x2 binary)
                          numsteps) #number of sampler steps in gems data generation process
 {
@@ -836,26 +824,9 @@ gen.dat.DGM2 <- function(n, #number of patients to simulate
   hf[[1, 3]] <- function(t, shape, scale, beta.x1, beta.x2) {
     exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
   
-  hf[[1, 6]] <- function(t, shape, scale, beta.x1, beta.x2) {
+  hf[[2, 3]] <- function(t, shape, scale, beta.x1, beta.x2) {
     exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-  
-  hf[[2, 4]] <- function(t, shape, scale, beta.x1, beta.x2) {
-    exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-  
-  hf[[2, 6]] <- function(t, shape, scale, beta.x1, beta.x2) {
-    exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-  
-  hf[[3, 5]] <- function(t, shape, scale, beta.x1, beta.x2) {
-    exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-  
-  hf[[3, 6]] <- function(t, shape, scale, beta.x1, beta.x2) {
-    exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-  
-  hf[[4, 6]] <- function(t, shape, scale, beta.x1, beta.x2) {
-    exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-  
-  hf[[5, 6]] <- function(t, shape, scale, beta.x1, beta.x2) {
-    exp(bl["x1"]*beta.x1 + bl["x2"]*beta.x2)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
+
   
   #print(hf)
   
@@ -871,20 +842,8 @@ gen.dat.DGM2 <- function(n, #number of patients to simulate
                       beta.x1 = beta12.x1, beta.x2 = beta12.x2)
   par[[1, 3]] <- list(shape = shape13, scale = scale13, 
                       beta.x1 = beta13.x1, beta.x2 = beta13.x2)
-  par[[1, 6]] <- list(shape = shape16, scale = scale16, 
-                      beta.x1 = beta16.x1, beta.x2 = beta16.x2)
-  par[[2, 4]] <- list(shape = shape24, scale = scale24, 
-                      beta.x1 = beta24.x1, beta.x2 = beta24.x2)
-  par[[2, 6]] <- list(shape = shape26, scale = scale26, 
-                      beta.x1 = beta26.x1, beta.x2 = beta26.x2)
-  par[[3, 5]] <- list(shape = shape35, scale = scale35, 
-                      beta.x1 = beta35.x1, beta.x2 = beta35.x2)
-  par[[3, 6]] <- list(shape = shape36, scale = scale36, 
-                      beta.x1 = beta36.x1, beta.x2 = beta36.x2)
-  par[[4, 6]] <- list(shape = shape46, scale = scale46, 
-                      beta.x1 = beta46.x1, beta.x2 = beta46.x2)
-  par[[5, 6]] <- list(shape = shape56, scale = scale56, 
-                      beta.x1 = beta56.x1, beta.x2 = beta56.x2)
+  par[[2, 3]] <- list(shape = shape23, scale = scale23, 
+                      beta.x1 = beta23.x1, beta.x2 = beta23.x2)
   
   ## Generate the cohort
   time.in <- Sys.time()
@@ -913,8 +872,8 @@ convert.mstate.DGM2.seperate45.nocens <- function(cohort.in,
                                                   max.follow){
   
   ## Turn event times into a dataframe and make the colnames not have any spaces in them
-  dat.mstate.temp <- select(cohort.in, paste("State.", 1:6, sep = ""))
-  colnames(dat.mstate.temp) <- paste0("state", 1:6)
+  dat.mstate.temp <- select(cohort.in, paste("State.", 1:3, sep = ""))
+  colnames(dat.mstate.temp) <- paste0("state", 1:3)
   
   ## Now set any transitions that didn't happen to the maximum value of follow up
   ## Therefore any event that happens, will happen before this. If a transition never happens, an individual will be censored
@@ -946,8 +905,8 @@ convert.mstate.DGM2.seperate45.nocens <- function(cohort.in,
   
   ### Now we can use msprep from the mstate package to turn into wide format
   ## First create a transition matrix corresponding to the columns
-  tmat <- transMat(x = list(c(2,3,6), c(4,6), c(5,6), c(6), c(6), c()),
-                   names = paste0("state", 1:6))
+  tmat <- transMat(x = list(c(1,3), c(2,3), c(3), c(3), c()),
+                   names = paste0("state", 1:3))
   
   
   ##############################################################################
@@ -971,8 +930,8 @@ convert.mstate.DGM2.seperate45.nocens <- function(cohort.in,
   
   ## Now can prepare the data into wide format
   dat.mstate.temp.wide <- msprep(dat.mstate.temp, trans = tmat, 
-                                 time = c(NA, paste0("state", 2:6)),
-                                 status = c(NA, paste0("state", 2:6, ".s")), 
+                                 time = c(NA, paste0("state", 2:3)),
+                                 status = c(NA, paste0("state", 2:3, ".s")), 
                                  keep = c("x1","x2","patid"))
   
   ## Want to expand the covariates to allow different covariate effects per transition
@@ -1019,20 +978,8 @@ convert.mstate.DGM2.combine45.cens <- function(cohort.in,
   data.raw <- data.frame(cohort.in, "cens.times" = cens.times$eventtime)
   
   ## Turn event times into a dataframe and make the colnames not have any spaces in them
-  dat.mstate.temp <- select(cohort.in, paste("State.", 1:6, sep = ""))
-  colnames(dat.mstate.temp) <- paste0("state", 1:6)
-  
-  ## Combine states 4 and 5 (they are mutually exclusive, so just take the number which isn't NA, if either are not NA)
-  dat.mstate.temp$state45 <- rep(NA, nrow(dat.mstate.temp))
-  dat.mstate.temp$state45[!is.na(dat.mstate.temp$state4)] <- dat.mstate.temp$state4[!is.na(dat.mstate.temp$state4)]
-  dat.mstate.temp$state45[!is.na(dat.mstate.temp$state5)] <- dat.mstate.temp$state5[!is.na(dat.mstate.temp$state5)]
-  
-  ## Turn state 45 into state 4, and turn state 6 (death) into a new state 5
-  dat.mstate.temp$state4 <- dat.mstate.temp$state45
-  dat.mstate.temp$state5 <- dat.mstate.temp$state6
-  
-  ## Remove states 45 and 6
-  dat.mstate.temp <- dat.mstate.temp[, 1:5]
+  dat.mstate.temp <- select(cohort.in, paste("State.", 1:3, sep = ""))
+  colnames(dat.mstate.temp) <- paste0("state", 1:3)
   
   ## Now it has the structure of DGM1, but was generated through DGM2
   
@@ -1065,21 +1012,9 @@ convert.mstate.DGM2.combine45.cens <- function(cohort.in,
   ## If any events happen after censoring, reduce event time to the censoring time, and set the event indicator to 0
   dat.mstate.temp <- dat.mstate.temp %>%
     mutate(state2 = case_when(state2 < cens.time ~ state2,
-                              state2 >= cens.time ~ cens.time),
-           state3 = case_when(state3 < cens.time ~ state3,
-                              state3 >= cens.time ~ cens.time),
-           state4 = case_when(state4 < cens.time ~ state4,
-                              state4 >= cens.time ~ cens.time),
-           state5 = case_when(state5 < cens.time ~ state5,
-                              state5 >= cens.time ~ cens.time)) %>%
+                              state2 >= cens.time ~ cens.time)) %>%
     mutate(state2.s = case_when(state2 < cens.time ~ state2.s,
-                                state2 == cens.time ~ 0),
-           state3.s = case_when(state3 < cens.time ~ state3.s,
-                                state3 == cens.time ~ 0),
-           state4.s = case_when(state4 < cens.time ~ state4.s,
-                                state4 == cens.time ~ 0),
-           state5.s = case_when(state5 < cens.time ~ state5.s,
-                                state5 == cens.time ~ 0))
+                                state2 == cens.time ~ 0))
   
   ## Now need to add baseline data
   dat.mstate.temp$x1 <- cohort.in$x1
@@ -1088,8 +1023,8 @@ convert.mstate.DGM2.combine45.cens <- function(cohort.in,
   
   ### Now we can use msprep from the mstate package to turn into wide format
   ## First create a transition matrix corresponding to the columns
-  tmat <- transMat(x = list(c(2,3,5), c(4,5), c(4,5), c(5), c()),
-                   names = paste0("state", 1:5))
+  tmat <- transMat(x = list(c(2,3), c(3), c()),
+                   names = paste0("state", 1:3))
   
   
   ##############################################################################
@@ -1113,8 +1048,8 @@ convert.mstate.DGM2.combine45.cens <- function(cohort.in,
   
   ## Now can prepare the data into wide format
   dat.mstate.temp.wide <- msprep(dat.mstate.temp, trans = tmat, 
-                                 time = c(NA, paste0("state", 2:5)),
-                                 status = c(NA, paste0("state", 2:5, ".s")), 
+                                 time = c(NA, paste0("state", 2:3)),
+                                 status = c(NA, paste0("state", 2:3, ".s")), 
                                  keep = c("x1","x2","cens.time","patid"))
   
   ## Want to expand the covariates to allow different covariate effects per transition
@@ -1387,10 +1322,10 @@ calc.calib.aj <- function(data.mstate, tmat, t.eval){
   t.eval.dat <- pt.aj[[1]]$time[max(which(pt.aj[[1]]$time <= t.eval))]
   
   ### Extract AJ estimator at this time point
-  obs.aj <- pt.aj[[1]][pt.aj[[1]]$time == t.eval.dat, paste("pstate", 1:5, sep = "")]
+  obs.aj <- pt.aj[[1]][pt.aj[[1]]$time == t.eval.dat, paste("pstate", 1:3, sep = "")]
   
   ### Extract AJ standard error  at this time point
-  obs.aj.se <- pt.aj[[1]][pt.aj[[1]]$time == t.eval.dat, paste("se", 1:5, sep = "")]
+  obs.aj.se <- pt.aj[[1]][pt.aj[[1]]$time == t.eval.dat, paste("se", 1:3, sep = "")]
   
   ### Create output object
   output.object <- list("obs.aj" = obs.aj, "obs.aj.se" = obs.aj.se)
@@ -1415,7 +1350,7 @@ calc.calib.lmaj <- function(data.mstate, t.eval){
   t.eval.dat <- pt.lmaj$time[max(which(pt.lmaj$time <= t.eval))]
   
   ### Get the LMAJ estimator at this time point
-  obs.lmaj <- pt.lmaj[pt.lmaj$time == t.eval.dat, paste("pstate", 1:5, sep = "")]
+  obs.lmaj <- pt.lmaj[pt.lmaj$time == t.eval.dat, paste("pstate", 1:3, sep = "")]
   
   return(obs.lmaj)
 }
@@ -1481,21 +1416,15 @@ calc.calib.blr <- function(data.mstate, data.raw, t.eval, p.est){
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5),
+                                  patid %in% ids.state.list[[3]] ~ 3),
            state1.bin = case_when(state.poly == 1 ~ 1,
                                   state.poly != 1 ~ 0),
            state2.bin = case_when(state.poly == 2 ~ 1,
                                   state.poly != 2 ~ 0),
            state3.bin = case_when(state.poly == 3 ~ 1,
-                                  state.poly != 3 ~ 0),
-           state4.bin = case_when(state.poly == 4 ~ 1,
-                                  state.poly != 4 ~ 0),
-           state5.bin = case_when(state.poly == 5 ~ 1,
-                                  state.poly != 5 ~ 0))
+                                  state.poly != 3 ~ 0))
   
-  ### Add the predicted risks, and the logit transormation of the predicted risks to the dataset
+  ### Add the predicted risks, and the logit transformation of the predicted risks to the dataset
   p.est.logit <- log(p.est/(1-p.est))
   colnames(p.est.logit) <- paste("p.est.logit", 1:ncol(p.est.logit), sep = "")
   data.raw <- data.frame(data.raw, p.est, p.est.logit)
@@ -1508,39 +1437,27 @@ calc.calib.blr <- function(data.mstate, data.raw, t.eval, p.est){
   lrm1 <- glm(state1.bin ~ p.est.logit1, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm2 <- glm(state2.bin ~ p.est.logit2, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm3 <- glm(state3.bin ~ p.est.logit3, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm4 <- glm(state4.bin ~ p.est.logit4, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm5 <- glm(state5.bin ~ p.est.logit5, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   
   slopes <- c("state1" = as.numeric(coefficients(lrm1)[2]),
               "state2" = as.numeric(coefficients(lrm2)[2]),
-              "state3" = as.numeric(coefficients(lrm3)[2]),
-              "state4" = as.numeric(coefficients(lrm4)[2]),
-              "state5" = as.numeric(coefficients(lrm5)[2]))
+              "state3" = as.numeric(coefficients(lrm3)[2]))
   
   slopes.se <- c("state1" = as.numeric(summary(lrm1)$coefficients[2,2]),
                  "state2" = as.numeric(summary(lrm2)$coefficients[2,2]),
-                 "state3" = as.numeric(summary(lrm3)$coefficients[2,2]),
-                 "state4" = as.numeric(summary(lrm4)$coefficients[2,2]),
-                 "state5" = as.numeric(summary(lrm5)$coefficients[2,2]))
+                 "state3" = as.numeric(summary(lrm3)$coefficients[2,2]))
   
   ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
   lrm1.offset <- glm(state1.bin ~ offset(p.est.logit1), data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm2.offset <- glm(state2.bin ~ offset(p.est.logit2), data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm3.offset <- glm(state3.bin ~ offset(p.est.logit3), data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm4.offset <- glm(state4.bin ~ offset(p.est.logit4), data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm5.offset <- glm(state5.bin ~ offset(p.est.logit5), data = data.raw.noNA, family = quasibinomial(link = "logit"))
   
   intercepts <- c("state1" = as.numeric(coefficients(lrm1.offset)),
                   "state2" = as.numeric(coefficients(lrm2.offset)),
-                  "state3" = as.numeric(coefficients(lrm3.offset)),
-                  "state4" = as.numeric(coefficients(lrm4.offset)),
-                  "state5" = as.numeric(coefficients(lrm5.offset)))
+                  "state3" = as.numeric(coefficients(lrm3.offset)))
   
   intercepts.se <- c("state1" = as.numeric(summary(lrm1.offset)$coefficients[2]),
                      "state2" = as.numeric(summary(lrm2.offset)$coefficients[2]),
-                     "state3" = as.numeric(summary(lrm3.offset)$coefficients[2]),
-                     "state4" = as.numeric(summary(lrm4.offset)$coefficients[2]),
-                     "state5" = as.numeric(summary(lrm5.offset)$coefficients[2]))
+                     "state3" = as.numeric(summary(lrm3.offset)$coefficients[2]))
   
   ###
   ### Create predicted observed risk for each individual
@@ -1548,16 +1465,12 @@ calc.calib.blr <- function(data.mstate, data.raw, t.eval, p.est){
   pred.obs1 <- predict(lrm1, newdata = data.raw.noNA, type = "response")
   pred.obs2 <- predict(lrm2, newdata = data.raw.noNA, type = "response")
   pred.obs3 <- predict(lrm3, newdata = data.raw.noNA, type = "response")
-  pred.obs4 <- predict(lrm4, newdata = data.raw.noNA, type = "response")
-  pred.obs5 <- predict(lrm5, newdata = data.raw.noNA, type = "response")
   
   ### Get difference in risk
   diff.pred.obs1 <- mean(pred.obs1 - data.raw.noNA$p.est1)
   diff.pred.obs2 <- mean(pred.obs2 - data.raw.noNA$p.est2)
   diff.pred.obs3 <- mean(pred.obs3 - data.raw.noNA$p.est3)
-  diff.pred.obs4 <- mean(pred.obs4 - data.raw.noNA$p.est4)
-  diff.pred.obs5 <- mean(pred.obs5 - data.raw.noNA$p.est5)
-  diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3, diff.pred.obs4, diff.pred.obs5)
+  diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3)
   
   ### Create output object
   output.obj <- list("int" = intercepts, "int.se" = intercepts.se,
@@ -1597,21 +1510,15 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5),
+                                  patid %in% ids.state.list[[3]] ~ 3),
            state1.bin = case_when(state.poly == 1 ~ 1,
                                   state.poly != 1 ~ 0),
            state2.bin = case_when(state.poly == 2 ~ 1,
                                   state.poly != 2 ~ 0),
            state3.bin = case_when(state.poly == 3 ~ 1,
-                                  state.poly != 3 ~ 0),
-           state4.bin = case_when(state.poly == 4 ~ 1,
-                                  state.poly != 4 ~ 0),
-           state5.bin = case_when(state.poly == 5 ~ 1,
-                                  state.poly != 5 ~ 0))
+                                  state.poly != 3 ~ 0))
   
-  ### Add the predicted risks, and the logit transormation of the predicted risks to the dataset
+  ### Add the predicted risks, and the logit transformation of the predicted risks to the dataset
   p.est.logit <- log(p.est/(1-p.est))
   colnames(p.est.logit) <- paste("p.est.logit", 1:ncol(p.est.logit), sep = "")
   data.raw <- data.frame(data.raw, p.est, p.est.logit)
@@ -1639,20 +1546,14 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   lrm1.mspec <- glm(state1.bin ~ p.est.logit1, weights = ipcw.mspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm2.mspec <- glm(state2.bin ~ p.est.logit2, weights = ipcw.mspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm3.mspec <- glm(state3.bin ~ p.est.logit3, weights = ipcw.mspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm4.mspec <- glm(state4.bin ~ p.est.logit4, weights = ipcw.mspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm5.mspec <- glm(state5.bin ~ p.est.logit5, weights = ipcw.mspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   
   slopes.mspec <- c("state1" = as.numeric(coefficients(lrm1.mspec)[2]),
                     "state2" = as.numeric(coefficients(lrm2.mspec)[2]),
-                    "state3" = as.numeric(coefficients(lrm3.mspec)[2]),
-                    "state4" = as.numeric(coefficients(lrm4.mspec)[2]),
-                    "state5" = as.numeric(coefficients(lrm5.mspec)[2]))
+                    "state3" = as.numeric(coefficients(lrm3.mspec)[2]))
   
   slopes.mspec.se <- c("state1" = as.numeric(summary(lrm1.mspec)$coefficients[2,2]),
                        "state2" = as.numeric(summary(lrm2.mspec)$coefficients[2,2]),
-                       "state3" = as.numeric(summary(lrm3.mspec)$coefficients[2,2]),
-                       "state4" = as.numeric(summary(lrm4.mspec)$coefficients[2,2]),
-                       "state5" = as.numeric(summary(lrm5.mspec)$coefficients[2,2]))
+                       "state3" = as.numeric(summary(lrm3.mspec)$coefficients[2,2]))
   
   ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
   lrm1.mspec.offset <- glm(state1.bin ~ offset(p.est.logit1), weights = ipcw.mspec, data = data.raw.noNA, 
@@ -1661,22 +1562,14 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
                            family = quasibinomial(link = "logit"))
   lrm3.mspec.offset <- glm(state3.bin ~ offset(p.est.logit3), weights = ipcw.mspec, data = data.raw.noNA, 
                            family = quasibinomial(link = "logit"))
-  lrm4.mspec.offset <- glm(state4.bin ~ offset(p.est.logit4), weights = ipcw.mspec, data = data.raw.noNA, 
-                           family = quasibinomial(link = "logit"))
-  lrm5.mspec.offset <- glm(state5.bin ~ offset(p.est.logit5), weights = ipcw.mspec, data = data.raw.noNA, 
-                           family = quasibinomial(link = "logit"))
   
   intercepts.mspec <- c("state1" = as.numeric(coefficients(lrm1.mspec.offset)),
                         "state2" = as.numeric(coefficients(lrm2.mspec.offset)),
-                        "state3" = as.numeric(coefficients(lrm3.mspec.offset)),
-                        "state4" = as.numeric(coefficients(lrm4.mspec.offset)),
-                        "state5" = as.numeric(coefficients(lrm5.mspec.offset)))
+                        "state3" = as.numeric(coefficients(lrm3.mspec.offset)))
   
   intercepts.mspec.se <- c("state1" = as.numeric(summary(lrm1.mspec.offset)$coefficients[2]),
                            "state2" = as.numeric(summary(lrm2.mspec.offset)$coefficients[2]),
-                           "state3" = as.numeric(summary(lrm3.mspec.offset)$coefficients[2]),
-                           "state4" = as.numeric(summary(lrm4.mspec.offset)$coefficients[2]),
-                           "state5" = as.numeric(summary(lrm5.mspec.offset)$coefficients[2]))
+                           "state3" = as.numeric(summary(lrm3.mspec.offset)$coefficients[2]))
   
   
   ###
@@ -1687,20 +1580,14 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   lrm1.pspec <- glm(state1.bin ~ p.est.logit1, weights = ipcw.pspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm2.pspec <- glm(state2.bin ~ p.est.logit2, weights = ipcw.pspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm3.pspec <- glm(state3.bin ~ p.est.logit3, weights = ipcw.pspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm4.pspec <- glm(state4.bin ~ p.est.logit4, weights = ipcw.pspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm5.pspec <- glm(state5.bin ~ p.est.logit5, weights = ipcw.pspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   
   slopes.pspec <- c("state1" = as.numeric(coefficients(lrm1.pspec)[2]),
                     "state2" = as.numeric(coefficients(lrm2.pspec)[2]),
-                    "state3" = as.numeric(coefficients(lrm3.pspec)[2]),
-                    "state4" = as.numeric(coefficients(lrm4.pspec)[2]),
-                    "state5" = as.numeric(coefficients(lrm5.pspec)[2]))
+                    "state3" = as.numeric(coefficients(lrm3.pspec)[2]))
   
   slopes.pspec.se <- c("state1" = as.numeric(summary(lrm1.pspec)$coefficients[2,2]),
                        "state2" = as.numeric(summary(lrm2.pspec)$coefficients[2,2]),
-                       "state3" = as.numeric(summary(lrm3.pspec)$coefficients[2,2]),
-                       "state4" = as.numeric(summary(lrm4.pspec)$coefficients[2,2]),
-                       "state5" = as.numeric(summary(lrm5.pspec)$coefficients[2,2]))
+                       "state3" = as.numeric(summary(lrm3.pspec)$coefficients[2,2]))
   
   ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
   lrm1.pspec.offset <- glm(state1.bin ~ offset(p.est.logit1), weights = ipcw.pspec, data = data.raw.noNA, 
@@ -1709,22 +1596,14 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
                            family = quasibinomial(link = "logit"))
   lrm3.pspec.offset <- glm(state3.bin ~ offset(p.est.logit3), weights = ipcw.pspec, data = data.raw.noNA, 
                            family = quasibinomial(link = "logit"))
-  lrm4.pspec.offset <- glm(state4.bin ~ offset(p.est.logit4), weights = ipcw.pspec, data = data.raw.noNA, 
-                           family = quasibinomial(link = "logit"))
-  lrm5.pspec.offset <- glm(state5.bin ~ offset(p.est.logit5), weights = ipcw.pspec, data = data.raw.noNA, 
-                           family = quasibinomial(link = "logit"))
   
   intercepts.pspec <- c("state1" = as.numeric(coefficients(lrm1.pspec.offset)),
                         "state2" = as.numeric(coefficients(lrm2.pspec.offset)),
-                        "state3" = as.numeric(coefficients(lrm3.pspec.offset)),
-                        "state4" = as.numeric(coefficients(lrm4.pspec.offset)),
-                        "state5" = as.numeric(coefficients(lrm5.pspec.offset)))
+                        "state3" = as.numeric(coefficients(lrm3.pspec.offset)))
   
   intercepts.pspec.se <- c("state1" = as.numeric(summary(lrm1.pspec.offset)$coefficients[2]),
                            "state2" = as.numeric(summary(lrm2.pspec.offset)$coefficients[2]),
-                           "state3" = as.numeric(summary(lrm3.pspec.offset)$coefficients[2]),
-                           "state4" = as.numeric(summary(lrm4.pspec.offset)$coefficients[2]),
-                           "state5" = as.numeric(summary(lrm5.pspec.offset)$coefficients[2]))
+                           "state3" = as.numeric(summary(lrm3.pspec.offset)$coefficients[2]))
   
   ###
   ### Extract slopes and intercepts for DGM-specified weighted models
@@ -1734,20 +1613,14 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   lrm1.DGMspec <- glm(state1.bin ~ p.est.logit1, weights = ipcw.DGMspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm2.DGMspec <- glm(state2.bin ~ p.est.logit2, weights = ipcw.DGMspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   lrm3.DGMspec <- glm(state3.bin ~ p.est.logit3, weights = ipcw.DGMspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm4.DGMspec <- glm(state4.bin ~ p.est.logit4, weights = ipcw.DGMspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
-  lrm5.DGMspec <- glm(state5.bin ~ p.est.logit5, weights = ipcw.DGMspec, data = data.raw.noNA, family = quasibinomial(link = "logit"))
   
   slopes.DGMspec <- c("state1" = as.numeric(coefficients(lrm1.DGMspec)[2]),
                       "state2" = as.numeric(coefficients(lrm2.DGMspec)[2]),
-                      "state3" = as.numeric(coefficients(lrm3.DGMspec)[2]),
-                      "state4" = as.numeric(coefficients(lrm4.DGMspec)[2]),
-                      "state5" = as.numeric(coefficients(lrm5.DGMspec)[2]))
+                      "state3" = as.numeric(coefficients(lrm3.DGMspec)[2]))
   
   slopes.DGMspec.se <- c("state1" = as.numeric(summary(lrm1.DGMspec)$coefficients[2,2]),
                          "state2" = as.numeric(summary(lrm2.DGMspec)$coefficients[2,2]),
-                         "state3" = as.numeric(summary(lrm3.DGMspec)$coefficients[2,2]),
-                         "state4" = as.numeric(summary(lrm4.DGMspec)$coefficients[2,2]),
-                         "state5" = as.numeric(summary(lrm5.DGMspec)$coefficients[2,2]))
+                         "state3" = as.numeric(summary(lrm3.DGMspec)$coefficients[2,2]))
   
   ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
   lrm1.DGMspec.offset <- glm(state1.bin ~ offset(p.est.logit1), weights = ipcw.DGMspec, data = data.raw.noNA, 
@@ -1756,22 +1629,14 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
                              family = quasibinomial(link = "logit"))
   lrm3.DGMspec.offset <- glm(state3.bin ~ offset(p.est.logit3), weights = ipcw.DGMspec, data = data.raw.noNA, 
                              family = quasibinomial(link = "logit"))
-  lrm4.DGMspec.offset <- glm(state4.bin ~ offset(p.est.logit4), weights = ipcw.DGMspec, data = data.raw.noNA, 
-                             family = quasibinomial(link = "logit"))
-  lrm5.DGMspec.offset <- glm(state5.bin ~ offset(p.est.logit5), weights = ipcw.DGMspec, data = data.raw.noNA, 
-                             family = quasibinomial(link = "logit"))
   
   intercepts.DGMspec <- c("state1" = as.numeric(coefficients(lrm1.DGMspec.offset)),
                           "state2" = as.numeric(coefficients(lrm2.DGMspec.offset)),
-                          "state3" = as.numeric(coefficients(lrm3.DGMspec.offset)),
-                          "state4" = as.numeric(coefficients(lrm4.DGMspec.offset)),
-                          "state5" = as.numeric(coefficients(lrm5.DGMspec.offset)))
+                          "state3" = as.numeric(coefficients(lrm3.DGMspec.offset)))
   
   intercepts.DGMspec.se <- c("state1" = as.numeric(summary(lrm1.DGMspec.offset)$coefficients[2]),
                              "state2" = as.numeric(summary(lrm2.DGMspec.offset)$coefficients[2]),
-                             "state3" = as.numeric(summary(lrm3.DGMspec.offset)$coefficients[2]),
-                             "state4" = as.numeric(summary(lrm4.DGMspec.offset)$coefficients[2]),
-                             "state5" = as.numeric(summary(lrm5.DGMspec.offset)$coefficients[2]))
+                             "state3" = as.numeric(summary(lrm3.DGMspec.offset)$coefficients[2]))
   
   ###
   ### Create predicted observed risk for each individual
@@ -1782,48 +1647,36 @@ calc.calib.blr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   pred.obs.mspec1 <- predict(lrm1.mspec.offset, newdata = data.raw.noNA, type = "response")
   pred.obs.mspec2 <- predict(lrm2.mspec.offset, newdata = data.raw.noNA, type = "response")
   pred.obs.mspec3 <- predict(lrm3.mspec.offset, newdata = data.raw.noNA, type = "response")
-  pred.obs.mspec4 <- predict(lrm4.mspec.offset, newdata = data.raw.noNA, type = "response")
-  pred.obs.mspec5 <- predict(lrm5.mspec.offset, newdata = data.raw.noNA, type = "response")
   
   ### Get difference in risk
   diff.pred.obs.mspec1 <- mean(pred.obs.mspec1 - data.raw.noNA$p.est1)
   diff.pred.obs.mspec2 <- mean(pred.obs.mspec2 - data.raw.noNA$p.est2)
   diff.pred.obs.mspec3 <- mean(pred.obs.mspec3 - data.raw.noNA$p.est3)
-  diff.pred.obs.mspec4 <- mean(pred.obs.mspec4 - data.raw.noNA$p.est4)
-  diff.pred.obs.mspec5 <- mean(pred.obs.mspec5 - data.raw.noNA$p.est5)
-  diff.pred.obs.mspec <- c(diff.pred.obs.mspec1, diff.pred.obs.mspec2, diff.pred.obs.mspec3, diff.pred.obs.mspec4, diff.pred.obs.mspec5)
+  diff.pred.obs.mspec <- c(diff.pred.obs.mspec1, diff.pred.obs.mspec2, diff.pred.obs.mspec3)
   
   ###
   ### perfectly specified model
   pred.obs.pspec1 <- predict(lrm1.pspec.offset, newdata = data.raw.noNA, type = "response")
   pred.obs.pspec2 <- predict(lrm2.pspec.offset, newdata = data.raw.noNA, type = "response")
   pred.obs.pspec3 <- predict(lrm3.pspec.offset, newdata = data.raw.noNA, type = "response")
-  pred.obs.pspec4 <- predict(lrm4.pspec.offset, newdata = data.raw.noNA, type = "response")
-  pred.obs.pspec5 <- predict(lrm5.pspec.offset, newdata = data.raw.noNA, type = "response")
   
   ### Get difference in risk
   diff.pred.obs.pspec1 <- mean(pred.obs.pspec1 - data.raw.noNA$p.est1)
   diff.pred.obs.pspec2 <- mean(pred.obs.pspec2 - data.raw.noNA$p.est2)
   diff.pred.obs.pspec3 <- mean(pred.obs.pspec3 - data.raw.noNA$p.est3)
-  diff.pred.obs.pspec4 <- mean(pred.obs.pspec4 - data.raw.noNA$p.est4)
-  diff.pred.obs.pspec5 <- mean(pred.obs.pspec5 - data.raw.noNA$p.est5)
-  diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3, diff.pred.obs.pspec4, diff.pred.obs.pspec5)
+  diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3)
   
   ###
   ### DGM spec
   pred.obs.DGMspec1 <- predict(lrm1.DGMspec.offset, newdata = data.raw.noNA, type = "response")
   pred.obs.DGMspec2 <- predict(lrm2.DGMspec.offset, newdata = data.raw.noNA, type = "response")
   pred.obs.DGMspec3 <- predict(lrm3.DGMspec.offset, newdata = data.raw.noNA, type = "response")
-  pred.obs.DGMspec4 <- predict(lrm4.DGMspec.offset, newdata = data.raw.noNA, type = "response")
-  pred.obs.DGMspec5 <- predict(lrm5.DGMspec.offset, newdata = data.raw.noNA, type = "response")
   
   ### Get difference in risk
   diff.pred.obs.DGMspec1 <- mean(pred.obs.DGMspec1 - data.raw.noNA$p.est1)
   diff.pred.obs.DGMspec2 <- mean(pred.obs.DGMspec2 - data.raw.noNA$p.est2)
   diff.pred.obs.DGMspec3 <- mean(pred.obs.DGMspec3 - data.raw.noNA$p.est3)
-  diff.pred.obs.DGMspec4 <- mean(pred.obs.DGMspec4 - data.raw.noNA$p.est4)
-  diff.pred.obs.DGMspec5 <- mean(pred.obs.DGMspec5 - data.raw.noNA$p.est5)
-  diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3, diff.pred.obs.DGMspec4, diff.pred.obs.DGMspec5)
+  diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3)
   
   ### Create output object
   output.obj <- list("int.mspec" = intercepts.mspec, "int.mspec.se" = intercepts.mspec.se,
@@ -1868,21 +1721,15 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5),
+                                  patid %in% ids.state.list[[3]] ~ 3),
            state1.bin = case_when(state.poly == 1 ~ 1,
                                   state.poly != 1 ~ 0),
            state2.bin = case_when(state.poly == 2 ~ 1,
                                   state.poly != 2 ~ 0),
            state3.bin = case_when(state.poly == 3 ~ 1,
-                                  state.poly != 3 ~ 0),
-           state4.bin = case_when(state.poly == 4 ~ 1,
-                                  state.poly != 4 ~ 0),
-           state5.bin = case_when(state.poly == 5 ~ 1,
-                                  state.poly != 5 ~ 0))
+                                  state.poly != 3 ~ 0))
   
-  ### Add the predicted risks, and the logit transormation of the predicted risks to the dataset
+  ### Add the predicted risks, and the logit transformation of the predicted risks to the dataset
   p.est.logit <- log(p.est/(1-p.est))
   colnames(p.est.logit) <- paste("p.est.logit", 1:ncol(p.est.logit), sep = "")
   data.raw <- data.frame(data.raw, p.est, p.est.logit)
@@ -1920,14 +1767,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     lrm1 <- glm(state1.bin ~ p.est.logit1, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm2 <- glm(state2.bin ~ p.est.logit2, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm3 <- glm(state3.bin ~ p.est.logit3, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm4 <- glm(state4.bin ~ p.est.logit4, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm5 <- glm(state5.bin ~ p.est.logit5, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     
     slopes <- c("slopes1" = as.numeric(coefficients(lrm1)[2]),
                 "slopes2" = as.numeric(coefficients(lrm2)[2]),
-                "slopes3" = as.numeric(coefficients(lrm3)[2]),
-                "slopes4" = as.numeric(coefficients(lrm4)[2]),
-                "slopes5" = as.numeric(coefficients(lrm5)[2]))
+                "slopes3" = as.numeric(coefficients(lrm3)[2]))
     
     ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
     lrm1.offset <- glm(state1.bin ~ offset(p.est.logit1), data = data.boot.noNA, 
@@ -1936,16 +1779,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
                        family = quasibinomial(link = "logit"))
     lrm3.offset <- glm(state3.bin ~ offset(p.est.logit3), data = data.boot.noNA, 
                        family = quasibinomial(link = "logit"))
-    lrm4.offset <- glm(state4.bin ~ offset(p.est.logit4), data = data.boot.noNA, 
-                       family = quasibinomial(link = "logit"))
-    lrm5.offset <- glm(state5.bin ~ offset(p.est.logit5), data = data.boot.noNA, 
-                       family = quasibinomial(link = "logit"))
     
     intercepts <- c("int1" = as.numeric(coefficients(lrm1.offset)),
                     "int2" = as.numeric(coefficients(lrm2.offset)),
-                    "int3" = as.numeric(coefficients(lrm3.offset)),
-                    "int4" = as.numeric(coefficients(lrm4.offset)),
-                    "int5" = as.numeric(coefficients(lrm5.offset)))
+                    "int3" = as.numeric(coefficients(lrm3.offset)))
     
     ###
     ### Extract slopes and intercepts for miss-specified weighted models
@@ -1955,14 +1792,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     lrm1.mspec <- glm(state1.bin ~ p.est.logit1, weights = ipcw.mspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm2.mspec <- glm(state2.bin ~ p.est.logit2, weights = ipcw.mspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm3.mspec <- glm(state3.bin ~ p.est.logit3, weights = ipcw.mspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm4.mspec <- glm(state4.bin ~ p.est.logit4, weights = ipcw.mspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm5.mspec <- glm(state5.bin ~ p.est.logit5, weights = ipcw.mspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     
     slopes.mspec <- c("slopes.mspec1" = as.numeric(coefficients(lrm1.mspec)[2]),
                       "slopes.mspec2" = as.numeric(coefficients(lrm2.mspec)[2]),
-                      "slopes.mspec3" = as.numeric(coefficients(lrm3.mspec)[2]),
-                      "slopes.mspec4" = as.numeric(coefficients(lrm4.mspec)[2]),
-                      "slopes.mspec5" = as.numeric(coefficients(lrm5.mspec)[2]))
+                      "slopes.mspec3" = as.numeric(coefficients(lrm3.mspec)[2]))
     
     ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
     lrm1.mspec.offset <- glm(state1.bin ~ offset(p.est.logit1), weights = ipcw.mspec, data = data.boot.noNA, 
@@ -1971,16 +1804,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
                              family = quasibinomial(link = "logit"))
     lrm3.mspec.offset <- glm(state3.bin ~ offset(p.est.logit3), weights = ipcw.mspec, data = data.boot.noNA, 
                              family = quasibinomial(link = "logit"))
-    lrm4.mspec.offset <- glm(state4.bin ~ offset(p.est.logit4), weights = ipcw.mspec, data = data.boot.noNA, 
-                             family = quasibinomial(link = "logit"))
-    lrm5.mspec.offset <- glm(state5.bin ~ offset(p.est.logit5), weights = ipcw.mspec, data = data.boot.noNA, 
-                             family = quasibinomial(link = "logit"))
     
     intercepts.mspec <- c("int.mspec1" = as.numeric(coefficients(lrm1.mspec.offset)),
                           "int.mspec2" = as.numeric(coefficients(lrm2.mspec.offset)),
-                          "int.mspec3" = as.numeric(coefficients(lrm3.mspec.offset)),
-                          "int.mspec4" = as.numeric(coefficients(lrm4.mspec.offset)),
-                          "int.mspec5" = as.numeric(coefficients(lrm5.mspec.offset)))
+                          "int.mspec3" = as.numeric(coefficients(lrm3.mspec.offset)))
     
     ###
     ### Extract slopes and intercepts for perfectly-specified weighted models
@@ -1990,14 +1817,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     lrm1.pspec <- glm(state1.bin ~ p.est.logit1, weights = ipcw.pspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm2.pspec <- glm(state2.bin ~ p.est.logit2, weights = ipcw.pspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm3.pspec <- glm(state3.bin ~ p.est.logit3, weights = ipcw.pspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm4.pspec <- glm(state4.bin ~ p.est.logit4, weights = ipcw.pspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm5.pspec <- glm(state5.bin ~ p.est.logit5, weights = ipcw.pspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     
     slopes.pspec <- c("slopes.pspec1" = as.numeric(coefficients(lrm1.pspec)[2]),
                       "slopes.pspec2" = as.numeric(coefficients(lrm2.pspec)[2]),
-                      "slopes.pspec3" = as.numeric(coefficients(lrm3.pspec)[2]),
-                      "slopes.pspec4" = as.numeric(coefficients(lrm4.pspec)[2]),
-                      "slopes.pspec5" = as.numeric(coefficients(lrm5.pspec)[2]))
+                      "slopes.pspec3" = as.numeric(coefficients(lrm3.pspec)[2]))
     
     
     ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
@@ -2007,16 +1830,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
                              family = quasibinomial(link = "logit"))
     lrm3.pspec.offset <- glm(state3.bin ~ offset(p.est.logit3), weights = ipcw.pspec, data = data.boot.noNA, 
                              family = quasibinomial(link = "logit"))
-    lrm4.pspec.offset <- glm(state4.bin ~ offset(p.est.logit4), weights = ipcw.pspec, data = data.boot.noNA, 
-                             family = quasibinomial(link = "logit"))
-    lrm5.pspec.offset <- glm(state5.bin ~ offset(p.est.logit5), weights = ipcw.pspec, data = data.boot.noNA, 
-                             family = quasibinomial(link = "logit"))
     
     intercepts.pspec <- c("int.pspec1" = as.numeric(coefficients(lrm1.pspec.offset)),
                           "int.pspec2" = as.numeric(coefficients(lrm2.pspec.offset)),
-                          "int.pspec3" = as.numeric(coefficients(lrm3.pspec.offset)),
-                          "int.pspec4" = as.numeric(coefficients(lrm4.pspec.offset)),
-                          "int.pspec5" = as.numeric(coefficients(lrm5.pspec.offset)))
+                          "int.pspec3" = as.numeric(coefficients(lrm3.pspec.offset)))
     
     ###
     ### Extract slopes and intercepts for DGM-specified weighted models
@@ -2026,14 +1843,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     lrm1.DGMspec <- glm(state1.bin ~ p.est.logit1, weights = ipcw.DGMspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm2.DGMspec <- glm(state2.bin ~ p.est.logit2, weights = ipcw.DGMspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     lrm3.DGMspec <- glm(state3.bin ~ p.est.logit3, weights = ipcw.DGMspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm4.DGMspec <- glm(state4.bin ~ p.est.logit4, weights = ipcw.DGMspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
-    lrm5.DGMspec <- glm(state5.bin ~ p.est.logit5, weights = ipcw.DGMspec, data = data.boot.noNA, family = quasibinomial(link = "logit"))
     
     slopes.DGMspec <- c("slopes.DGMspec1" = as.numeric(coefficients(lrm1.DGMspec)[2]),
                         "slopes.DGMspec2" = as.numeric(coefficients(lrm2.DGMspec)[2]),
-                        "slopes.DGMspec3" = as.numeric(coefficients(lrm3.DGMspec)[2]),
-                        "slopes.DGMspec4" = as.numeric(coefficients(lrm4.DGMspec)[2]),
-                        "slopes.DGMspec5" = as.numeric(coefficients(lrm5.DGMspec)[2]))
+                        "slopes.DGMspec3" = as.numeric(coefficients(lrm3.DGMspec)[2]))
     
     
     ### Fit logistic regression recalibration models to the uncensored observations at time t to calculate intercepts
@@ -2043,16 +1856,10 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
                                family = quasibinomial(link = "logit"))
     lrm3.DGMspec.offset <- glm(state3.bin ~ offset(p.est.logit3), weights = ipcw.DGMspec, data = data.boot.noNA, 
                                family = quasibinomial(link = "logit"))
-    lrm4.DGMspec.offset <- glm(state4.bin ~ offset(p.est.logit4), weights = ipcw.DGMspec, data = data.boot.noNA, 
-                               family = quasibinomial(link = "logit"))
-    lrm5.DGMspec.offset <- glm(state5.bin ~ offset(p.est.logit5), weights = ipcw.DGMspec, data = data.boot.noNA, 
-                               family = quasibinomial(link = "logit"))
     
     intercepts.DGMspec <- c("int.DGMspec1" = as.numeric(coefficients(lrm1.DGMspec.offset)),
                             "int.DGMspec2" = as.numeric(coefficients(lrm2.DGMspec.offset)),
-                            "int.DGMspec3" = as.numeric(coefficients(lrm3.DGMspec.offset)),
-                            "int.DGMspec4" = as.numeric(coefficients(lrm4.DGMspec.offset)),
-                            "int.DGMspec5" = as.numeric(coefficients(lrm5.DGMspec.offset)))
+                            "int.DGMspec3" = as.numeric(coefficients(lrm3.DGMspec.offset)))
     
     ###
     ### Create predicted observed risk for each individual
@@ -2063,64 +1870,49 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     pred.obs1 <- predict(lrm1.offset, newdata = data.boot.noNA, type = "response")
     pred.obs2 <- predict(lrm2.offset, newdata = data.boot.noNA, type = "response")
     pred.obs3 <- predict(lrm3.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs4 <- predict(lrm4.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs5 <- predict(lrm5.offset, newdata = data.boot.noNA, type = "response")
     
     ### Get difference in risk
     diff.pred.obs1 <- mean(pred.obs1 - data.boot.noNA$p.est1)
     diff.pred.obs2 <- mean(pred.obs2 - data.boot.noNA$p.est2)
     diff.pred.obs3 <- mean(pred.obs3 - data.boot.noNA$p.est3)
-    diff.pred.obs4 <- mean(pred.obs4 - data.boot.noNA$p.est4)
-    diff.pred.obs5 <- mean(pred.obs5 - data.boot.noNA$p.est5)
-    diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3, diff.pred.obs4, diff.pred.obs5)
+    diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3)
     
     ###
     ### miss-specified model
     pred.obs.mspec1 <- predict(lrm1.mspec.offset, newdata = data.boot.noNA, type = "response")
     pred.obs.mspec2 <- predict(lrm2.mspec.offset, newdata = data.boot.noNA, type = "response")
     pred.obs.mspec3 <- predict(lrm3.mspec.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs.mspec4 <- predict(lrm4.mspec.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs.mspec5 <- predict(lrm5.mspec.offset, newdata = data.boot.noNA, type = "response")
     
     ### Get difference in risk
     diff.pred.obs.mspec1 <- mean(pred.obs.mspec1 - data.boot.noNA$p.est1)
     diff.pred.obs.mspec2 <- mean(pred.obs.mspec2 - data.boot.noNA$p.est2)
     diff.pred.obs.mspec3 <- mean(pred.obs.mspec3 - data.boot.noNA$p.est3)
-    diff.pred.obs.mspec4 <- mean(pred.obs.mspec4 - data.boot.noNA$p.est4)
-    diff.pred.obs.mspec5 <- mean(pred.obs.mspec5 - data.boot.noNA$p.est5)
-    diff.pred.obs.mspec <- c(diff.pred.obs.mspec1, diff.pred.obs.mspec2, diff.pred.obs.mspec3, diff.pred.obs.mspec4, diff.pred.obs.mspec5)
+    diff.pred.obs.mspec <- c(diff.pred.obs.mspec1, diff.pred.obs.mspec2, diff.pred.obs.mspec3)
     
     ###
     ### perfectly specified model
     pred.obs.pspec1 <- predict(lrm1.pspec.offset, newdata = data.boot.noNA, type = "response")
     pred.obs.pspec2 <- predict(lrm2.pspec.offset, newdata = data.boot.noNA, type = "response")
     pred.obs.pspec3 <- predict(lrm3.pspec.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs.pspec4 <- predict(lrm4.pspec.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs.pspec5 <- predict(lrm5.pspec.offset, newdata = data.boot.noNA, type = "response")
     
     ### Get difference in risk
     diff.pred.obs.pspec1 <- mean(pred.obs.pspec1 - data.boot.noNA$p.est1)
     diff.pred.obs.pspec2 <- mean(pred.obs.pspec2 - data.boot.noNA$p.est2)
     diff.pred.obs.pspec3 <- mean(pred.obs.pspec3 - data.boot.noNA$p.est3)
-    diff.pred.obs.pspec4 <- mean(pred.obs.pspec4 - data.boot.noNA$p.est4)
-    diff.pred.obs.pspec5 <- mean(pred.obs.pspec5 - data.boot.noNA$p.est5)
-    diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3, diff.pred.obs.pspec4, diff.pred.obs.pspec5)
+  
+    diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3)
     
     ###
     ### DGM spec
     pred.obs.DGMspec1 <- predict(lrm1.DGMspec.offset, newdata = data.boot.noNA, type = "response")
     pred.obs.DGMspec2 <- predict(lrm2.DGMspec.offset, newdata = data.boot.noNA, type = "response")
     pred.obs.DGMspec3 <- predict(lrm3.DGMspec.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs.DGMspec4 <- predict(lrm4.DGMspec.offset, newdata = data.boot.noNA, type = "response")
-    pred.obs.DGMspec5 <- predict(lrm5.DGMspec.offset, newdata = data.boot.noNA, type = "response")
     
     ### Get difference in risk
     diff.pred.obs.DGMspec1 <- mean(pred.obs.DGMspec1 - data.boot.noNA$p.est1)
     diff.pred.obs.DGMspec2 <- mean(pred.obs.DGMspec2 - data.boot.noNA$p.est2)
     diff.pred.obs.DGMspec3 <- mean(pred.obs.DGMspec3 - data.boot.noNA$p.est3)
-    diff.pred.obs.DGMspec4 <- mean(pred.obs.DGMspec4 - data.boot.noNA$p.est4)
-    diff.pred.obs.DGMspec5 <- mean(pred.obs.DGMspec5 - data.boot.noNA$p.est5)
-    diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3, diff.pred.obs.DGMspec4, diff.pred.obs.DGMspec5)
+    diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3)
     
     ### create and return output object
     output.obj <- c(intercepts, intercepts.mspec, intercepts.pspec, intercepts.DGMspec, slopes, slopes.mspec, slopes.pspec, slopes.DGMspec,
@@ -2131,21 +1923,21 @@ calc.calib.blr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
   
   ### Run the bootstrapping
   boot.obj <- boot(data.raw, statistic = get_int_slope_boot, R = n.boot)
-  colnames(boot.obj$t) <- c(paste("int", 1:5, sep = ""), paste("int.mspec", 1:5, sep = ""), 
-                            paste("int.pspec", 1:5, sep = ""), paste("int.DGMspec", 1:5, sep = ""), 
-                            paste("slope", 1:5, sep = ""), paste("slope.mspec", 1:5, sep = ""), 
-                            paste("slope.pspec", 1:5, sep = ""), paste("slope.DGMspec", 1:5, sep = ""),
-                            paste("diff.pred.obs", 1:5, sep = ""), paste("diff.pred.obs.mspec", 1:5, sep = ""), 
-                            paste("diff.pred.obs.pspec", 1:5, sep = ""), paste("diff.pred.obs.DGMspec", 1:5, sep = ""))  
+  colnames(boot.obj$t) <- c(paste("int", 1:3, sep = ""), paste("int.mspec", 1:3, sep = ""), 
+                            paste("int.pspec", 1:3, sep = ""), paste("int.DGMspec", 1:3, sep = ""), 
+                            paste("slope", 1:3, sep = ""), paste("slope.mspec", 1:3, sep = ""), 
+                            paste("slope.pspec", 1:3, sep = ""), paste("slope.DGMspec", 1:3, sep = ""),
+                            paste("diff.pred.obs", 1:3, sep = ""), paste("diff.pred.obs.mspec", 1:3, sep = ""), 
+                            paste("diff.pred.obs.pspec", 1:3, sep = ""), paste("diff.pred.obs.DGMspec", 1:3, sep = ""))  
   
   ### Calculate standard errors
   se <- sqrt(apply(boot.obj$t, 2, var))
-  names(se) <- c(paste("int", 1:5, sep = ""), paste("int.mspec", 1:5, sep = ""), 
-                 paste("int.pspec", 1:5, sep = ""), paste("int.DGMspec", 1:5, sep = ""), 
-                 paste("slope", 1:5, sep = ""), paste("slope.mspec", 1:5, sep = ""), 
-                 paste("slope.pspec", 1:5, sep = ""), paste("slope.DGMspec", 1:5, sep = ""),
-                 paste("diff.pred.obs", 1:5, sep = ""), paste("diff.pred.obs.mspec", 1:5, sep = ""), 
-                 paste("diff.pred.obs.pspec", 1:5, sep = ""), paste("diff.pred.obs.DGMspec", 1:5, sep = ""))
+  names(se) <- c(paste("int", 1:3, sep = ""), paste("int.mspec", 1:3, sep = ""), 
+                 paste("int.pspec", 1:3, sep = ""), paste("int.DGMspec", 1:3, sep = ""), 
+                 paste("slope", 1:3, sep = ""), paste("slope.mspec", 1:3, sep = ""), 
+                 paste("slope.pspec", 1:3, sep = ""), paste("slope.DGMspec", 1:3, sep = ""),
+                 paste("diff.pred.obs", 1:3, sep = ""), paste("diff.pred.obs.mspec", 1:3, sep = ""), 
+                 paste("diff.pred.obs.pspec", 1:3, sep = ""), paste("diff.pred.obs.DGMspec", 1:3, sep = ""))
   
   ### Return output
   output.object <- list("boot.obj" = boot.obj$t, "se" = se)
@@ -2185,9 +1977,7 @@ calc.calib.mlr <- function(data.mstate, data.raw, t.eval, p.est){
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5))
+                                  patid %in% ids.state.list[[3]] ~ 3))
   
   ### Add p.est to dataset
   data.raw <- data.frame(data.raw, p.est)
@@ -2196,18 +1986,15 @@ calc.calib.mlr <- function(data.mstate, data.raw, t.eval, p.est){
   data.raw <- data.raw %>%
     mutate(mlr.lp1 = log(p.est2/p.est1),
            mlr.lp2 = log(p.est3/p.est1),
-           mlr.lp3 = log(p.est4/p.est1),
-           mlr.lp4 = log(p.est5/p.est1),
            state.poly.fac = as.factor(state.poly))
   
   
   ## Add constraints
-  i <- diag(4)
-  i1 <- rbind(1, 0, 0, 0)
-  i2 <- rbind(0, 1, 0, 0)
-  i3 <- rbind(0, 0, 1, 0)
-  i4 <- rbind(0, 0, 0, 1)
-  clist <- list("(Intercept)" = i, "mlr.lp1" = i1, "mlr.lp2" = i2, "mlr.lp3" = i3, "mlr.lp4" = i4)
+  i <- diag(2)
+  i1 <- rbind(1, 0)
+  i2 <- rbind(0, 1)
+
+  clist <- list("(Intercept)" = i, "mlr.lp1" = i1, "mlr.lp2" = i2)
   clist
   
   ### Apply nominal recalibration framework
@@ -2217,39 +2004,33 @@ calc.calib.mlr <- function(data.mstate, data.raw, t.eval, p.est){
   data.raw.noNA <- data.raw %>% subset(!is.na(state.poly))
   
   ### Apply models
-  calib.model <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist, 
+  calib.model <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist, 
                       data = data.raw.noNA, family = multinomial(refLevel = "1"))
   
-  calib.model.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]), 
+  calib.model.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2")]), 
                              family = multinomial(refLevel = "1"))
   
   ###
   ### Create predicted observed risk for each individual
   ###
   pred.obs <- data.frame("mlr.lp1" = coefficients(calib.model.offset)[1] + data.raw.noNA$mlr.lp1,
-                         "mlr.lp2" = coefficients(calib.model.offset)[2] + data.raw.noNA$mlr.lp2,
-                         "mlr.lp3" = coefficients(calib.model.offset)[3] + data.raw.noNA$mlr.lp3,
-                         "mlr.lp4" = coefficients(calib.model.offset)[4] + data.raw.noNA$mlr.lp4)
+                         "mlr.lp2" = coefficients(calib.model.offset)[2] + data.raw.noNA$mlr.lp2)
   pred.obs <- mutate(pred.obs, 
-                     p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                     p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                     p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                     p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                     p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                     p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                     p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                     p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
   
   ### Get difference in risk
   diff.pred.obs1 <- mean(pred.obs[,"p1"] - data.raw.noNA$p.est1)
   diff.pred.obs2 <- mean(pred.obs[,"p2"] - data.raw.noNA$p.est2)
   diff.pred.obs3 <- mean(pred.obs[,"p3"] - data.raw.noNA$p.est3)
-  diff.pred.obs4 <- mean(pred.obs[,"p4"] - data.raw.noNA$p.est4)
-  diff.pred.obs5 <- mean(pred.obs[,"p5"] - data.raw.noNA$p.est5)
-  diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3, diff.pred.obs4, diff.pred.obs5)
+  diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3)
   
   ### Create output object
   output.object <- list("int" = calib.model.offset@coefficients, 
                         "int.se" = sqrt(diag(vcov(calib.model.offset))), 
-                        "slopes" = calib.model@coefficients[paste("mlr.lp", 1:4, sep = "")], 
-                        "slopes.se" = sqrt(diag(vcov(calib.model))[paste("mlr.lp", 1:4, sep = "")]),
+                        "slopes" = calib.model@coefficients[paste("mlr.lp", 1:2, sep = "")], 
+                        "slopes.se" = sqrt(diag(vcov(calib.model))[paste("mlr.lp", 1:2, sep = "")]),
                         "diff.pred.obs" = diff.pred.obs)
   return(output.object)
   
@@ -2285,9 +2066,7 @@ calc.calib.mlr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5))
+                                  patid %in% ids.state.list[[3]] ~ 3))
   
   ### Add p.est to dataset
   data.raw <- data.frame(data.raw, p.est)
@@ -2295,9 +2074,7 @@ calc.calib.mlr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   ### Add linear predictors from a multinomial framework
   data.raw <- data.raw %>%
     mutate(mlr.lp1 = log(p.est2/p.est1),
-           mlr.lp2 = log(p.est3/p.est1),
-           mlr.lp3 = log(p.est4/p.est1),
-           mlr.lp4 = log(p.est5/p.est1),
+           mlr.lp2 = log(p.est3/p.est1)
            state.poly.fac = as.factor(state.poly))
   
   ###
@@ -2314,12 +2091,10 @@ calc.calib.mlr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   ###
   
   ## Add constraints
-  i <- diag(4)
-  i1 <- rbind(1, 0, 0, 0)
-  i2 <- rbind(0, 1, 0, 0)
-  i3 <- rbind(0, 0, 1, 0)
-  i4 <- rbind(0, 0, 0, 1)
-  clist <- list("(Intercept)" = i, "mlr.lp1" = i1, "mlr.lp2" = i2, "mlr.lp3" = i3, "mlr.lp4" = i4)
+  i <- diag(2)
+  i1 <- rbind(1, 0)
+  i2 <- rbind(0, 1)
+  clist <- list("(Intercept)" = i, "mlr.lp1" = i1, "mlr.lp2" = i2)
   clist
   
   ### Apply nominal recalibration framework
@@ -2330,27 +2105,27 @@ calc.calib.mlr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   data.raw.noNA <- data.raw %>% subset(!is.na(state.poly))
   
   ### Miss-specified weights
-  calib.model.mspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist, weights = ipcw.mspec,
+  calib.model.mspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist, weights = ipcw.mspec,
                             data = data.raw.noNA, family = multinomial(refLevel = "1"))
   
-  calib.model.mspec.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]),
+  calib.model.mspec.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2")]),
                                    weights = data.raw.noNA$ipcw.mspec,
                                    family = multinomial(refLevel = "1"))
   
   ### Perfectly specified weights
-  calib.model.pspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist, weights = ipcw.pspec,
+  calib.model.pspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist, weights = ipcw.pspec,
                             data = data.raw.noNA, family = multinomial(refLevel = "1"))
   
-  calib.model.pspec.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]),
+  calib.model.pspec.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2")]),
                                    weights = data.raw.noNA$ipcw.pspec,
                                    family = multinomial(refLevel = "1"))
   
   
   ### DGM specified weights
-  calib.model.DGMspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist, weights = ipcw.DGMspec,
+  calib.model.DGMspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist, weights = ipcw.DGMspec,
                               data = data.raw.noNA, family = multinomial(refLevel = "1"))
   
-  calib.model.DGMspec.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]),
+  calib.model.DGMspec.offset <- vgam(data.raw.noNA$state.poly.fac ~ 1, offset = as.matrix(data.raw.noNA[, c("mlr.lp1", "mlr.lp2")]),
                                      weights = data.raw.noNA$ipcw.DGMspec,
                                      family = multinomial(refLevel = "1"))
   
@@ -2361,79 +2136,61 @@ calc.calib.mlr.ipcw <- function(data.mstate, data.raw, t.eval, p.est, max.weight
   ###
   ### miss-specified model spec
   pred.obs.mspec <- data.frame("mlr.lp1" = coefficients(calib.model.mspec.offset)[1] + data.raw.noNA$mlr.lp1,
-                               "mlr.lp2" = coefficients(calib.model.mspec.offset)[2] + data.raw.noNA$mlr.lp2,
-                               "mlr.lp3" = coefficients(calib.model.mspec.offset)[3] + data.raw.noNA$mlr.lp3,
-                               "mlr.lp4" = coefficients(calib.model.mspec.offset)[4] + data.raw.noNA$mlr.lp4)
+                               "mlr.lp2" = coefficients(calib.model.mspec.offset)[2] + data.raw.noNA$mlr.lp2)
   pred.obs.mspec <- mutate(pred.obs.mspec, 
-                           p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                           p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                           p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                           p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
   
   ### Get difference in risk
   diff.pred.obs.mspec1 <- mean(pred.obs.mspec[,"p1"] - data.raw.noNA$p.est1)
   diff.pred.obs.mspec2 <- mean(pred.obs.mspec[,"p2"] - data.raw.noNA$p.est2)
   diff.pred.obs.mspec3 <- mean(pred.obs.mspec[,"p3"] - data.raw.noNA$p.est3)
-  diff.pred.obs.mspec4 <- mean(pred.obs.mspec[,"p4"] - data.raw.noNA$p.est4)
-  diff.pred.obs.mspec5 <- mean(pred.obs.mspec[,"p5"] - data.raw.noNA$p.est5)
-  diff.pred.obs.mspec <- c(diff.pred.obs.mspec1, diff.pred.obs.mspec2, diff.pred.obs.mspec3, diff.pred.obs.mspec4, diff.pred.obs.mspec5)
+  diff.pred.obs.mspec <- c(diff.pred.obs.mspec1, diff.pred.obs.mspec2, diff.pred.obs.mspec3)
   
   ###
   ### Perfectly specified model 
   pred.obs.pspec <- data.frame("mlr.lp1" = coefficients(calib.model.pspec.offset)[1] + data.raw.noNA$mlr.lp1,
-                               "mlr.lp2" = coefficients(calib.model.pspec.offset)[2] + data.raw.noNA$mlr.lp2,
-                               "mlr.lp3" = coefficients(calib.model.pspec.offset)[3] + data.raw.noNA$mlr.lp3,
-                               "mlr.lp4" = coefficients(calib.model.pspec.offset)[4] + data.raw.noNA$mlr.lp4)
+                               "mlr.lp2" = coefficients(calib.model.pspec.offset)[2] + data.raw.noNA$mlr.lp2)
   pred.obs.pspec <- mutate(pred.obs.pspec, 
-                           p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                           p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                           p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                           p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                           p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
   
   ### Get difference in risk
   diff.pred.obs.pspec1 <- mean(pred.obs.pspec[,"p1"] - data.raw.noNA$p.est1)
   diff.pred.obs.pspec2 <- mean(pred.obs.pspec[,"p2"] - data.raw.noNA$p.est2)
   diff.pred.obs.pspec3 <- mean(pred.obs.pspec[,"p3"] - data.raw.noNA$p.est3)
-  diff.pred.obs.pspec4 <- mean(pred.obs.pspec[,"p4"] - data.raw.noNA$p.est4)
-  diff.pred.obs.pspec5 <- mean(pred.obs.pspec[,"p5"] - data.raw.noNA$p.est5)
-  diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3, diff.pred.obs.pspec4, diff.pred.obs.pspec5)
+  diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3)
   
   ###
   ### DGM spec
   pred.obs.DGMspec <- data.frame("mlr.lp1" = coefficients(calib.model.DGMspec.offset)[1] + data.raw.noNA$mlr.lp1,
-                                 "mlr.lp2" = coefficients(calib.model.DGMspec.offset)[2] + data.raw.noNA$mlr.lp2,
-                                 "mlr.lp3" = coefficients(calib.model.DGMspec.offset)[3] + data.raw.noNA$mlr.lp3,
-                                 "mlr.lp4" = coefficients(calib.model.DGMspec.offset)[4] + data.raw.noNA$mlr.lp4)
+                                 "mlr.lp2" = coefficients(calib.model.DGMspec.offset)[2] + data.raw.noNA$mlr.lp2)
   pred.obs.DGMspec <- mutate(pred.obs.DGMspec, 
-                             p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                             p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                             p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                             p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
   
   ### Get difference in risk
   diff.pred.obs.DGMspec1 <- mean(pred.obs.DGMspec[,"p1"] - data.raw.noNA$p.est1)
   diff.pred.obs.DGMspec2 <- mean(pred.obs.DGMspec[,"p2"] - data.raw.noNA$p.est2)
   diff.pred.obs.DGMspec3 <- mean(pred.obs.DGMspec[,"p3"] - data.raw.noNA$p.est3)
-  diff.pred.obs.DGMspec4 <- mean(pred.obs.DGMspec[,"p4"] - data.raw.noNA$p.est4)
-  diff.pred.obs.DGMspec5 <- mean(pred.obs.DGMspec[,"p5"] - data.raw.noNA$p.est5)
-  diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3, diff.pred.obs.DGMspec4, diff.pred.obs.DGMspec5)
+  diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3)
   
   ### Create output object
   output.object <- list("int.mspec" = calib.model.mspec.offset@coefficients, 
                         "int.mspec.se" = sqrt(diag(vcov(calib.model.mspec.offset))), 
-                        "slopes.mspec" = calib.model.mspec@coefficients[paste("mlr.lp", 1:4, sep = "")], 
-                        "slopes.mspec.se" = sqrt(diag(vcov(calib.model.mspec))[paste("mlr.lp", 1:4, sep = "")]),
+                        "slopes.mspec" = calib.model.mspec@coefficients[paste("mlr.lp", 1:2, sep = "")], 
+                        "slopes.mspec.se" = sqrt(diag(vcov(calib.model.mspec))[paste("mlr.lp", 1:2, sep = "")]),
                         "int.pspec" = calib.model.pspec.offset@coefficients, 
                         "int.pspec.se" = sqrt(diag(vcov(calib.model.pspec.offset))), 
-                        "slopes.pspec" = calib.model.pspec@coefficients[paste("mlr.lp", 1:4, sep = "")], 
-                        "slopes.pspec.se" = sqrt(diag(vcov(calib.model.pspec))[paste("mlr.lp", 1:4, sep = "")]),
+                        "slopes.pspec" = calib.model.pspec@coefficients[paste("mlr.lp", 1:2, sep = "")], 
+                        "slopes.pspec.se" = sqrt(diag(vcov(calib.model.pspec))[paste("mlr.lp", 1:2, sep = "")]),
                         "int.DGMspec" = calib.model.DGMspec.offset@coefficients, 
                         "int.DGMspec.se" = sqrt(diag(vcov(calib.model.DGMspec.offset))), 
-                        "slopes.DGMspec" = calib.model.DGMspec@coefficients[paste("mlr.lp", 1:4, sep = "")], 
-                        "slopes.DGMspec.se" = sqrt(diag(vcov(calib.model.DGMspec))[paste("mlr.lp", 1:4, sep = "")]),
+                        "slopes.DGMspec" = calib.model.DGMspec@coefficients[paste("mlr.lp", 1:2, sep = "")], 
+                        "slopes.DGMspec.se" = sqrt(diag(vcov(calib.model.DGMspec))[paste("mlr.lp", 1:2, sep = "")]),
                         "diff.pred.obs.mspec" = diff.pred.obs.mspec,
                         "diff.pred.obs.pspec" = diff.pred.obs.pspec,
                         "diff.pred.obs.DGMspec" = diff.pred.obs.DGMspec)
@@ -2471,9 +2228,7 @@ calc.calib.mlr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5))
+                                  patid %in% ids.state.list[[3]] ~ 3))
   
   ### Add p.est to dataset
   data.raw <- data.frame(data.raw, p.est)
@@ -2482,8 +2237,6 @@ calc.calib.mlr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
   data.raw <- data.raw %>%
     mutate(mlr.lp1 = log(p.est2/p.est1),
            mlr.lp2 = log(p.est3/p.est1),
-           mlr.lp3 = log(p.est4/p.est1),
-           mlr.lp4 = log(p.est5/p.est1),
            state.poly.fac = as.factor(state.poly))
   
   ### Calc DGM weights and add to dataset
@@ -2511,12 +2264,10 @@ calc.calib.mlr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     ###
     
     ## Add constraints
-    i <- diag(4)
-    i1 <- rbind(1, 0, 0, 0)
-    i2 <- rbind(0, 1, 0, 0)
-    i3 <- rbind(0, 0, 1, 0)
-    i4 <- rbind(0, 0, 0, 1)
-    clist <- list("(Intercept)" = i, "mlr.lp1" = i1, "mlr.lp2" = i2, "mlr.lp3" = i3, "mlr.lp4" = i4)
+    i <- diag(2)
+    i1 <- rbind(1, 0)
+    i2 <- rbind(0, 1)
+    clist <- list("(Intercept)" = i, "mlr.lp1" = i1, "mlr.lp2" = i2)
     clist
     
     ### Apply nominal recalibration framework
@@ -2527,33 +2278,33 @@ calc.calib.mlr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     data.boot.noNA <- data.boot %>% subset(!is.na(state.poly))
     
     ### No weights
-    calib.model <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist,
+    calib.model <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist,
                         data = data.boot.noNA, family = multinomial(refLevel = "1"))
     
-    calib.model.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]),
+    calib.model.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2")]),
                                family = multinomial(refLevel = "1"))
     
     ### Miss-specified weights
-    calib.model.mspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist, weights = ipcw.mspec,
+    calib.model.mspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist, weights = ipcw.mspec,
                               data = data.boot.noNA, family = multinomial(refLevel = "1"))
     
-    calib.model.mspec.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]),
+    calib.model.mspec.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2")]),
                                      weights = data.boot.noNA$ipcw.mspec,
                                      family = multinomial(refLevel = "1"))
     
     ### Perfectly specified weights
-    calib.model.pspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist, weights = ipcw.pspec,
+    calib.model.pspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist, weights = ipcw.pspec,
                               data = data.boot.noNA, family = multinomial(refLevel = "1"))
     
-    calib.model.pspec.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]),
+    calib.model.pspec.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2")]),
                                      weights = data.boot.noNA$ipcw.pspec,
                                      family = multinomial(refLevel = "1"))
     
     ### DGM specified weights
-    calib.model.DGMspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2 + mlr.lp3 + mlr.lp4, constraints = clist, weights = ipcw.DGMspec,
+    calib.model.DGMspec <- vgam(state.poly.fac ~ mlr.lp1 + mlr.lp2, constraints = clist, weights = ipcw.DGMspec,
                                 data = data.boot.noNA, family = multinomial(refLevel = "1"))
     
-    calib.model.DGMspec.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2", "mlr.lp3", "mlr.lp4")]),
+    calib.model.DGMspec.offset <- vgam(data.boot.noNA$state.poly.fac ~ 1, offset = as.matrix(data.boot.noNA[, c("mlr.lp1", "mlr.lp2")]),
                                        weights = data.boot.noNA$ipcw.DGMspec,
                                        family = multinomial(refLevel = "1"))
     
@@ -2564,86 +2315,62 @@ calc.calib.mlr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
     ###
     ### no weights
     pred.obs <- data.frame("mlr.lp1" = coefficients(calib.model.offset)[1] + data.boot.noNA$mlr.lp1,
-                           "mlr.lp2" = coefficients(calib.model.offset)[2] + data.boot.noNA$mlr.lp2,
-                           "mlr.lp3" = coefficients(calib.model.offset)[3] + data.boot.noNA$mlr.lp3,
-                           "mlr.lp4" = coefficients(calib.model.offset)[4] + data.boot.noNA$mlr.lp4)
+                           "mlr.lp2" = coefficients(calib.model.offset)[2] + data.boot.noNA$mlr.lp2)
     pred.obs <- mutate(pred.obs, 
-                       p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                       p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                       p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                       p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                       p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                       p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                       p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                       p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
     
     ### Get difference in risk
     diff.pred.obs1 <- mean(pred.obs[,"p1"] - data.boot.noNA$p.est1)
     diff.pred.obs2 <- mean(pred.obs[,"p2"] - data.boot.noNA$p.est2)
     diff.pred.obs3 <- mean(pred.obs[,"p3"] - data.boot.noNA$p.est3)
-    diff.pred.obs4 <- mean(pred.obs[,"p4"] - data.boot.noNA$p.est4)
-    diff.pred.obs5 <- mean(pred.obs[,"p5"] - data.boot.noNA$p.est5)
-    diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3, diff.pred.obs4, diff.pred.obs5)
+    diff.pred.obs <- c(diff.pred.obs1, diff.pred.obs2, diff.pred.obs3)
     
     ###
     ### miss-specified model spec
     pred.obs.mspec <- data.frame("mlr.lp1" = coefficients(calib.model.mspec.offset)[1] + data.boot.noNA$mlr.lp1,
-                                 "mlr.lp2" = coefficients(calib.model.mspec.offset)[2] + data.boot.noNA$mlr.lp2,
-                                 "mlr.lp3" = coefficients(calib.model.mspec.offset)[3] + data.boot.noNA$mlr.lp3,
-                                 "mlr.lp4" = coefficients(calib.model.mspec.offset)[4] + data.boot.noNA$mlr.lp4)
+                                 "mlr.lp2" = coefficients(calib.model.mspec.offset)[2] + data.boot.noNA$mlr.lp2)
     pred.obs.mspec <- mutate(pred.obs.mspec, 
-                             p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                             p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                             p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                             p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
     
     ### Get difference in risk
     diff.pred.obs.mspec1 <- mean(pred.obs.mspec[,"p1"] - data.boot.noNA$p.est1)
     diff.pred.obs.mspec2 <- mean(pred.obs.mspec[,"p2"] - data.boot.noNA$p.est2)
     diff.pred.obs.mspec3 <- mean(pred.obs.mspec[,"p3"] - data.boot.noNA$p.est3)
-    diff.pred.obs.mspec4 <- mean(pred.obs.mspec[,"p4"] - data.boot.noNA$p.est4)
-    diff.pred.obs.mspec5 <- mean(pred.obs.mspec[,"p5"] - data.boot.noNA$p.est5)
     diff.pred.obs.mspec <- c(diff.pred.obs.mspec1, diff.pred.obs.mspec2, diff.pred.obs.mspec3, diff.pred.obs.mspec4, diff.pred.obs.mspec5)
     
     ###
     ### Perfectly specified model 
     pred.obs.pspec <- data.frame("mlr.lp1" = coefficients(calib.model.pspec.offset)[1] + data.boot.noNA$mlr.lp1,
-                                 "mlr.lp2" = coefficients(calib.model.pspec.offset)[2] + data.boot.noNA$mlr.lp2,
-                                 "mlr.lp3" = coefficients(calib.model.pspec.offset)[3] + data.boot.noNA$mlr.lp3,
-                                 "mlr.lp4" = coefficients(calib.model.pspec.offset)[4] + data.boot.noNA$mlr.lp4)
+                                 "mlr.lp2" = coefficients(calib.model.pspec.offset)[2] + data.boot.noNA$mlr.lp2)
     pred.obs.pspec <- mutate(pred.obs.pspec, 
-                             p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                             p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                             p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                             p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                             p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
     
     ### Get difference in risk
     diff.pred.obs.pspec1 <- mean(pred.obs.pspec[,"p1"] - data.boot.noNA$p.est1)
     diff.pred.obs.pspec2 <- mean(pred.obs.pspec[,"p2"] - data.boot.noNA$p.est2)
     diff.pred.obs.pspec3 <- mean(pred.obs.pspec[,"p3"] - data.boot.noNA$p.est3)
-    diff.pred.obs.pspec4 <- mean(pred.obs.pspec[,"p4"] - data.boot.noNA$p.est4)
-    diff.pred.obs.pspec5 <- mean(pred.obs.pspec[,"p5"] - data.boot.noNA$p.est5)
-    diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3, diff.pred.obs.pspec4, diff.pred.obs.pspec5)
+    diff.pred.obs.pspec <- c(diff.pred.obs.pspec1, diff.pred.obs.pspec2, diff.pred.obs.pspec3)
     
     ###
     ### DGM spec
     pred.obs.DGMspec <- data.frame("mlr.lp1" = coefficients(calib.model.DGMspec.offset)[1] + data.boot.noNA$mlr.lp1,
-                                   "mlr.lp2" = coefficients(calib.model.DGMspec.offset)[2] + data.boot.noNA$mlr.lp2,
-                                   "mlr.lp3" = coefficients(calib.model.DGMspec.offset)[3] + data.boot.noNA$mlr.lp3,
-                                   "mlr.lp4" = coefficients(calib.model.DGMspec.offset)[4] + data.boot.noNA$mlr.lp4)
+                                   "mlr.lp2" = coefficients(calib.model.DGMspec.offset)[2] + data.boot.noNA$mlr.lp2)
     pred.obs.DGMspec <- mutate(pred.obs.DGMspec, 
-                               p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                               p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                               p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                               p4 = exp(mlr.lp3)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)),
-                               p5 = exp(mlr.lp4)/(1 + exp(mlr.lp1) + exp(mlr.lp2) + exp(mlr.lp3) + exp(mlr.lp4)))
+                               p1 = 1/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                               p2 = exp(mlr.lp1)/(1 + exp(mlr.lp1) + exp(mlr.lp2)),
+                               p3 = exp(mlr.lp2)/(1 + exp(mlr.lp1) + exp(mlr.lp2)))
     
     ### Get difference in risk
     diff.pred.obs.DGMspec1 <- mean(pred.obs.DGMspec[,"p1"] - data.boot.noNA$p.est1)
     diff.pred.obs.DGMspec2 <- mean(pred.obs.DGMspec[,"p2"] - data.boot.noNA$p.est2)
     diff.pred.obs.DGMspec3 <- mean(pred.obs.DGMspec[,"p3"] - data.boot.noNA$p.est3)
-    diff.pred.obs.DGMspec4 <- mean(pred.obs.DGMspec[,"p4"] - data.boot.noNA$p.est4)
-    diff.pred.obs.DGMspec5 <- mean(pred.obs.DGMspec[,"p5"] - data.boot.noNA$p.est5)
-    diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3, diff.pred.obs.DGMspec4, diff.pred.obs.DGMspec5)
+    diff.pred.obs.DGMspec <- c(diff.pred.obs.DGMspec1, diff.pred.obs.DGMspec2, diff.pred.obs.DGMspec3)
     
     
     ### Create and return output object
@@ -2667,21 +2394,21 @@ calc.calib.mlr.ipcw.boot.se <- function(data.mstate, data.raw, t.eval, p.est, n.
   
   ### Run the bootstrapping
   boot.obj <- boot(data.raw, statistic = get_int_slope_boot, R = n.boot)
-  colnames(boot.obj$t) <- c(paste("int", 2:5, sep = ""), paste("int.mspec", 2:5, sep = ""), 
-                            paste("int.pspec", 2:5, sep = ""), paste("int.DGMspec", 2:5, sep = ""),
-                            paste("slope", 2:5, sep = ""), paste("slope.mspec", 2:5, sep = ""), 
-                            paste("slope.pspec", 2:5, sep = ""), paste("slope.DGMspec", 2:5, sep = ""),
-                            paste("diff.pred.obs", 1:5, sep = ""), paste("diff.pred.obs.mspec", 1:5, sep = ""), 
-                            paste("diff.pred.obs.pspec", 1:5, sep = ""), paste("diff.pred.obs.DGMspec", 1:5, sep = ""))
+  colnames(boot.obj$t) <- c(paste("int", 2:5, sep = ""), paste("int.mspec", 2:3, sep = ""), 
+                            paste("int.pspec", 2:5, sep = ""), paste("int.DGMspec", 2:3, sep = ""),
+                            paste("slope", 2:5, sep = ""), paste("slope.mspec", 2:3, sep = ""), 
+                            paste("slope.pspec", 2:5, sep = ""), paste("slope.DGMspec", 2:3, sep = ""),
+                            paste("diff.pred.obs", 1:5, sep = ""), paste("diff.pred.obs.mspec", 1:3, sep = ""), 
+                            paste("diff.pred.obs.pspec", 1:5, sep = ""), paste("diff.pred.obs.DGMspec", 1:3, sep = ""))
   
   ### Calculate standard errors
   se <- sqrt(apply(boot.obj$t, 2, var))
-  names(se) <- c(paste("int", 2:5, sep = ""), paste("int.mspec", 2:5, sep = ""), 
-                 paste("int.pspec", 2:5, sep = ""), paste("int.DGMspec", 2:5, sep = ""),
-                 paste("slope", 2:5, sep = ""), paste("slope.mspec", 2:5, sep = ""), 
-                 paste("slope.pspec", 2:5, sep = ""), paste("slope.DGMspec", 2:5, sep = ""),
-                 paste("diff.pred.obs", 1:5, sep = ""), paste("diff.pred.obs.mspec", 1:5, sep = ""), 
-                 paste("diff.pred.obs.pspec", 1:5, sep = ""), paste("diff.pred.obs.DGMspec", 1:5, sep = ""))
+  names(se) <- c(paste("int", 2:3, sep = ""), paste("int.mspec", 2:3, sep = ""), 
+                 paste("int.pspec", 2:3, sep = ""), paste("int.DGMspec", 2:3, sep = ""),
+                 paste("slope", 2:3, sep = ""), paste("slope.mspec", 2:3, sep = ""), 
+                 paste("slope.pspec", 2:3, sep = ""), paste("slope.DGMspec", 2:3, sep = ""),
+                 paste("diff.pred.obs", 1:3, sep = ""), paste("diff.pred.obs.mspec", 1:3, sep = ""), 
+                 paste("diff.pred.obs.pspec", 1:3, sep = ""), paste("diff.pred.obs.DGMspec", 1:3, sep = ""))
   
   ### Return output
   output.object <- list("boot.obj" = boot.obj$t, "se" = se)
@@ -2783,19 +2510,13 @@ calc.calib.blr.mod <- function(data.mstate, data.raw, t.eval, p.est){
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5),
+                                  patid %in% ids.state.list[[3]] ~ 3),
            state1.bin = case_when(state.poly == 1 ~ 1,
                                   state.poly != 1 ~ 0),
            state2.bin = case_when(state.poly == 2 ~ 1,
                                   state.poly != 2 ~ 0),
            state3.bin = case_when(state.poly == 3 ~ 1,
                                   state.poly != 3 ~ 0),
-           state4.bin = case_when(state.poly == 4 ~ 1,
-                                  state.poly != 4 ~ 0),
-           state5.bin = case_when(state.poly == 5 ~ 1,
-                                  state.poly != 5 ~ 0),
            state.poly.fac = as.factor(state.poly))
   
   ### Add the predicted risks, and the logit transormation of the predicted risks to the dataset
@@ -2807,22 +2528,18 @@ calc.calib.blr.mod <- function(data.mstate, data.raw, t.eval, p.est){
   loess1 <- loess(state1.bin ~ p.est1, data = data.raw)
   loess2 <- loess(state2.bin ~ p.est2, data = data.raw)
   loess3 <- loess(state3.bin ~ p.est3, data = data.raw)
-  loess4 <- loess(state4.bin ~ p.est4, data = data.raw)
-  loess5 <- loess(state5.bin ~ p.est5, data = data.raw)
   
   ### Created 'predicted observed' probabilities for each individual
   data.raw$loess.pred.obs1 <- predict(loess1, newdata = data.raw)
   data.raw$loess.pred.obs2 <- predict(loess2, newdata = data.raw)
   data.raw$loess.pred.obs3 <- predict(loess3, newdata = data.raw)
-  data.raw$loess.pred.obs4 <- predict(loess4, newdata = data.raw)
-  data.raw$loess.pred.obs5 <- predict(loess5, newdata = data.raw)
   
   ### Calculate the ECI
-  ECI <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.pred.obs", 1:5, sep = "")])
+  ECI <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.pred.obs", 1:3, sep = "")])
   
   ### Produce plots for each and store in a list
-  plots.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -2883,22 +2600,16 @@ calc.calib.blr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, max.we
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5),
+                                  patid %in% ids.state.list[[3]] ~ 3),
            state1.bin = case_when(state.poly == 1 ~ 1,
                                   state.poly != 1 ~ 0),
            state2.bin = case_when(state.poly == 2 ~ 1,
                                   state.poly != 2 ~ 0),
            state3.bin = case_when(state.poly == 3 ~ 1,
                                   state.poly != 3 ~ 0),
-           state4.bin = case_when(state.poly == 4 ~ 1,
-                                  state.poly != 4 ~ 0),
-           state5.bin = case_when(state.poly == 5 ~ 1,
-                                  state.poly != 5 ~ 0),
            state.poly.fac = as.factor(state.poly))
   
-  ### Add the predicted risks, and the logit transormation of the predicted risks to the dataset
+  ### Add the predicted risks, and the logit transformation of the predicted risks to the dataset
   p.est.logit <- log(p.est/(1-p.est))
   colnames(p.est.logit) <- paste("p.est.logit", 1:ncol(p.est.logit), sep = "")
   data.raw <- data.frame(data.raw, p.est, p.est.logit)
@@ -2920,19 +2631,15 @@ calc.calib.blr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, max.we
   loess.mspec1 <- loess(state1.bin ~ p.est1, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.mspec"])
   loess.mspec2 <- loess(state2.bin ~ p.est2, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.mspec"])
   loess.mspec3 <- loess(state3.bin ~ p.est3, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.mspec"])
-  loess.mspec4 <- loess(state4.bin ~ p.est4, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.mspec"])
-  loess.mspec5 <- loess(state5.bin ~ p.est5, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.mspec"])
   
   ### Created 'predicted observed' probabilities for each individual
   data.raw$loess.mspec.pred.obs1 <- predict(loess.mspec1, newdata = data.raw)
   data.raw$loess.mspec.pred.obs2 <- predict(loess.mspec2, newdata = data.raw)
   data.raw$loess.mspec.pred.obs3 <- predict(loess.mspec3, newdata = data.raw)
-  data.raw$loess.mspec.pred.obs4 <- predict(loess.mspec4, newdata = data.raw)
-  data.raw$loess.mspec.pred.obs5 <- predict(loess.mspec5, newdata = data.raw)
   
   ### Produce plots for each and store in a list
-  plots.mspec.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.mspec.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -2961,19 +2668,15 @@ calc.calib.blr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, max.we
   loess.pspec1 <- loess(state1.bin ~ p.est1, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.pspec"])
   loess.pspec2 <- loess(state2.bin ~ p.est2, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.pspec"])
   loess.pspec3 <- loess(state3.bin ~ p.est3, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.pspec"])
-  loess.pspec4 <- loess(state4.bin ~ p.est4, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.pspec"])
-  loess.pspec5 <- loess(state5.bin ~ p.est5, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.pspec"])
   
   ### Created 'predicted observed' probabilities for each individual
   data.raw$loess.pspec.pred.obs1 <- predict(loess.pspec1, newdata = data.raw)
   data.raw$loess.pspec.pred.obs2 <- predict(loess.pspec2, newdata = data.raw)
   data.raw$loess.pspec.pred.obs3 <- predict(loess.pspec3, newdata = data.raw)
-  data.raw$loess.pspec.pred.obs4 <- predict(loess.pspec4, newdata = data.raw)
-  data.raw$loess.pspec.pred.obs5 <- predict(loess.pspec5, newdata = data.raw)
   
   ### Produce plots for each and store in a list
-  plots.pspec.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.pspec.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -3002,19 +2705,15 @@ calc.calib.blr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, max.we
   loess.DGMspec1 <- loess(state1.bin ~ p.est1, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.DGMspec"])
   loess.DGMspec2 <- loess(state2.bin ~ p.est2, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.DGMspec"])
   loess.DGMspec3 <- loess(state3.bin ~ p.est3, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.DGMspec"])
-  loess.DGMspec4 <- loess(state4.bin ~ p.est4, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.DGMspec"])
-  loess.DGMspec5 <- loess(state5.bin ~ p.est5, data = data.raw[!is.na(data.raw$state.poly), ], weights = data.raw[!is.na(data.raw$state.poly), "ipcw.DGMspec"])
   
   ### Created 'predicted observed' probabilities for each individual
   data.raw$loess.DGMspec.pred.obs1 <- predict(loess.DGMspec1, newdata = data.raw)
   data.raw$loess.DGMspec.pred.obs2 <- predict(loess.DGMspec2, newdata = data.raw)
   data.raw$loess.DGMspec.pred.obs3 <- predict(loess.DGMspec3, newdata = data.raw)
-  data.raw$loess.DGMspec.pred.obs4 <- predict(loess.DGMspec4, newdata = data.raw)
-  data.raw$loess.DGMspec.pred.obs5 <- predict(loess.DGMspec5, newdata = data.raw)
   
   ### Produce plots for each and store in a list
-  plots.DGMspec.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.DGMspec.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -3040,9 +2739,9 @@ calc.calib.blr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, max.we
   }
   
   ### Calculate the ECI
-  ECI.mspec <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.mspec.pred.obs", 1:5, sep = "")])
-  ECI.pspec <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.pspec.pred.obs", 1:5, sep = "")])
-  ECI.DGMspec <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.DGMspec.pred.obs", 1:5, sep = "")])
+  ECI.mspec <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.mspec.pred.obs", 1:3, sep = "")])
+  ECI.pspec <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.pspec.pred.obs", 1:3, sep = "")])
+  ECI.DGMspec <- calc.ECI(data.raw, p.est, data.raw[, paste("loess.DGMspec.pred.obs", 1:3, sep = "")])
   
   ### Return output object
   output.object <- list("plots.mspec.list" = plots.mspec.list, "plots.pspec.list" = plots.pspec.list, "plots.DGMspec.list" = plots.DGMspec.list, 
@@ -3085,9 +2784,7 @@ calc.calib.mlr.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int = 4,
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5))
+                                  patid %in% ids.state.list[[3]] ~ 3))
   
   ### Add p.est to dataset
   data.raw <- data.frame(data.raw, p.est)
@@ -3096,16 +2793,13 @@ calc.calib.mlr.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int = 4,
   data.raw <- data.raw %>%
     mutate(mlr.lp1 = log(p.est2/p.est1),
            mlr.lp2 = log(p.est3/p.est1),
-           mlr.lp3 = log(p.est4/p.est1),
-           mlr.lp4 = log(p.est5/p.est1),
            state.poly.fac = as.factor(state.poly))
   
   ### Apply nominal recalibration framework with vector spline smoothers
-  calib.model <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp3, ps.int = ps.int, degree = degree) + 
-                        sm.ps(mlr.lp4, ps.int = ps.int, degree = degree), 
+  calib.model <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree), 
                       data = data.raw, family = multinomial(refLevel = "1"))
   
-  ### Now generate predicted risks for each individual either A), in the validation cohort, or B) fo rsome vector of predicted risks
+  ### Now generate predicted risks for each individual either A), in the validation cohort, or B) for some vector of predicted risks
   mlr.pred.obs <- predict(calib.model, newdata = data.raw, type = "response")
   colnames(mlr.pred.obs) <- paste("mlr.pred.obs", 1:ncol(mlr.pred.obs), sep = "")
   
@@ -3117,8 +2811,8 @@ calc.calib.mlr.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int = 4,
   
   ### Create plots
   ### Produce plots for each and store in a list
-  plots.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -3180,9 +2874,7 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   data.raw <- data.raw %>% 
     mutate(state.poly = case_when(patid %in% ids.state.list[[1]] ~ 1,
                                   patid %in% ids.state.list[[2]] ~ 2,
-                                  patid %in% ids.state.list[[3]] ~ 3,
-                                  patid %in% ids.state.list[[4]] ~ 4,
-                                  patid %in% ids.state.list[[5]] ~ 5))
+                                  patid %in% ids.state.list[[3]] ~ 3))
   
   ### Add p.est to dataset
   data.raw <- data.frame(data.raw, p.est)
@@ -3191,8 +2883,6 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   data.raw <- data.raw %>%
     mutate(mlr.lp1 = log(p.est2/p.est1),
            mlr.lp2 = log(p.est3/p.est1),
-           mlr.lp3 = log(p.est4/p.est1),
-           mlr.lp4 = log(p.est5/p.est1),
            state.poly.fac = as.factor(state.poly))
   
   ###
@@ -3209,8 +2899,7 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   ###
   
   ### Apply nominal recalibration framework with vector spline smoothers
-  calib.model.mspec <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp3, ps.int = ps.int, degree = degree) + 
-                              sm.ps(mlr.lp4, ps.int = ps.int, degree = degree), weights = data.raw[!is.na(data.raw$state.poly), "ipcw.mspec"],
+  calib.model.mspec <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree), weights = data.raw[!is.na(data.raw$state.poly), "ipcw.mspec"],
                             data = data.raw[!is.na(data.raw$state.poly), ], family = multinomial(refLevel = "1"))
   
   ###
@@ -3218,8 +2907,7 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   ###
   
   ### Apply nominal recalibration framework with vector spline smoothers
-  calib.model.pspec <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp3, ps.int = ps.int, degree = degree) + 
-                              sm.ps(mlr.lp4, ps.int = ps.int, degree = degree), weights = data.raw[!is.na(data.raw$state.poly), "ipcw.pspec"],
+  calib.model.pspec <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree), weights = data.raw[!is.na(data.raw$state.poly), "ipcw.pspec"],
                             data = data.raw[!is.na(data.raw$state.poly), ], family = multinomial(refLevel = "1"))
   
   
@@ -3228,8 +2916,7 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   ###
   
   ### Apply nominal recalibration framework with vector spline smoothers
-  calib.model.DGMspec <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp3, ps.int = ps.int, degree = degree) + 
-                                sm.ps(mlr.lp4, ps.int = ps.int, degree = degree), weights = data.raw[!is.na(data.raw$state.poly), "ipcw.DGMspec"],
+  calib.model.DGMspec <- vgam(state.poly.fac ~ sm.ps(mlr.lp1, ps.int = ps.int, degree = degree) + sm.ps(mlr.lp2, ps.int = ps.int, degree = degree), weights = data.raw[!is.na(data.raw$state.poly), "ipcw.DGMspec"],
                               data = data.raw[!is.na(data.raw$state.poly), ], family = multinomial(refLevel = "1"))
   
   ###
@@ -3242,7 +2929,7 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   
   ### mspec
   ## Create dataframe to store
-  dat.mlr.mspec.pred.obs <- data.frame(matrix(NA, ncol = 5, nrow = nrow(data.raw)))
+  dat.mlr.mspec.pred.obs <- data.frame(matrix(NA, ncol = 3, nrow = nrow(data.raw)))
   ## Assign colnames
   colnames(dat.mlr.mspec.pred.obs) <- paste("mlr.mspec.pred.obs", 1:ncol(dat.mlr.mspec.pred.obs), sep = "")
   ## Calc pred.obs for those who are uncesored
@@ -3252,7 +2939,7 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   
   ### pspec
   ## Create dataframe to store
-  dat.mlr.pspec.pred.obs <- data.frame(matrix(NA, ncol = 5, nrow = nrow(data.raw)))
+  dat.mlr.pspec.pred.obs <- data.frame(matrix(NA, ncol = 3, nrow = nrow(data.raw)))
   ## Assign colnames
   colnames(dat.mlr.pspec.pred.obs) <- paste("mlr.pspec.pred.obs", 1:ncol(dat.mlr.pspec.pred.obs), sep = "")
   ## Calc pred.obs for those who are uncesored
@@ -3262,7 +2949,7 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   
   ### DGMspec
   ## Create dataframe to store
-  dat.mlr.DGMspec.pred.obs <- data.frame(matrix(NA, ncol = 5, nrow = nrow(data.raw)))
+  dat.mlr.DGMspec.pred.obs <- data.frame(matrix(NA, ncol = 3, nrow = nrow(data.raw)))
   ## Assign colnames
   colnames(dat.mlr.DGMspec.pred.obs) <- paste("mlr.DGMspec.pred.obs", 1:ncol(dat.mlr.DGMspec.pred.obs), sep = "")
   ## Calc pred.obs for those who are uncesored
@@ -3277,8 +2964,8 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   
   ### mspec
   ### Produce plots for each and store in a list
-  plots.mspec.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.mspec.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -3305,8 +2992,8 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   
   ### pspec
   ### Produce plots for each and store in a list
-  plots.pspec.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.pspec.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -3333,8 +3020,8 @@ calc.calib.mlr.ipcw.mod <- function(data.mstate, data.raw, t.eval, p.est, ps.int
   
   ### DGMspec
   ### Produce plots for each and store in a list
-  plots.DGMspec.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.DGMspec.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.raw$pred <- data.raw[, paste("p.est", i, sep = "")]
@@ -3487,22 +3174,18 @@ calc.calib.pv.moderate <- function(data.raw, pv.comb, p.est){
   loess1 <- loess(pv.state1 ~ p.est1, data = data.pv)
   loess2 <- loess(pv.state2 ~ p.est2, data = data.pv)
   loess3 <- loess(pv.state3 ~ p.est3, data = data.pv)
-  loess4 <- loess(pv.state4 ~ p.est4, data = data.pv)
-  loess5 <- loess(pv.state5 ~ p.est5, data = data.pv)
   
   ### Created 'predicted observed' probabilities for each individual
   data.pv$loess.pred.obs1 <- predict(loess1, newdata = data.pv)
   data.pv$loess.pred.obs2 <- predict(loess2, newdata = data.pv)
   data.pv$loess.pred.obs3 <- predict(loess3, newdata = data.pv)
-  data.pv$loess.pred.obs4 <- predict(loess4, newdata = data.pv)
-  data.pv$loess.pred.obs5 <- predict(loess5, newdata = data.pv)
   
   ### Calculate the ECI
-  ECI <- calc.ECI(data.raw, p.est, data.pv[, paste("loess.pred.obs", 1:5, sep = "")])
+  ECI <- calc.ECI(data.raw, p.est, data.pv[, paste("loess.pred.obs", 1:3, sep = "")])
   
   ### Produce plots for each and store in a list
-  plots.list <- vector("list", 5)
-  for (i in 1:5){
+  plots.list <- vector("list", 3)
+  for (i in 1:3){
     
     ### Creaet variables to plot 
     data.pv$pred <- data.pv[, paste("p.est", i, sep = "")]
@@ -3543,7 +3226,7 @@ calc.calib.pv.moderate <- function(data.raw, pv.comb, p.est){
 ### assuming a exponential baseline hazard
 ###
 calc.scale <- function(p){
-  return(7*365.25/(-log(p)))
+  return(1*365.25/(-log(p)))
 }
 
 ###
@@ -3551,8 +3234,8 @@ calc.scale <- function(p){
 ###
 calc.ECI <- function(data.raw.in, p.est.in, p.obs.in){
   
-  stopifnot(ncol(p.est.in) == 5)
-  stopifnot(ncol(p.obs.in) == 5)
+  stopifnot(ncol(p.est.in) == 3)
+  stopifnot(ncol(p.obs.in) == 3)
   
   ### Reduvce to individuals who are uncensored
   p.est.in <- p.est.in[!is.na(data.raw.in$state.poly.fac), ]
@@ -3564,17 +3247,13 @@ calc.ECI <- function(data.raw.in, p.est.in, p.obs.in){
   K1 <- sum(data.raw.in$state.poly.fac == 1)/nrow(data.raw.in)
   K2 <- sum(data.raw.in$state.poly.fac == 2)/nrow(data.raw.in)
   K3 <- sum(data.raw.in$state.poly.fac == 3)/nrow(data.raw.in)
-  K4 <- sum(data.raw.in$state.poly.fac == 4)/nrow(data.raw.in)
-  K5 <- sum(data.raw.in$state.poly.fac == 5)/nrow(data.raw.in)
   
   # Calc numerator
   ECI.numer <- (sum((p.est.in[,1] - p.obs.in[,1])^2) + sum((p.est.in[,2] - p.obs.in[,2])^2) +
-                  sum((p.est.in[,3] - p.obs.in[,3])^2) + sum((p.est.in[,4] - p.obs.in[,4])^2) +
-                  sum((p.est.in[,5] - p.obs.in[,5])^2))
+                  sum((p.est.in[,3] - p.obs.in[,3])^2))
   # Calc denominator
   ECI.denom <- (sum((p.est.in[,1] - K1)^2) + sum((p.est.in[,2] - K2)^2) +
-                  sum((p.est.in[,3] - K3)^2) + sum((p.est.in[,4] - K4)^2) +
-                  sum((p.est.in[,5] - K5)^2))
+                  sum((p.est.in[,3] - K3)^2))
   # Calc ECI
   ECI <- ECI.numer/ECI.denom
   
@@ -3592,20 +3271,20 @@ calc.weights <- function(data.raw, t.eval, max.weight = 10){
   ### We add a censoring time that would be observed from the data (this would be the min of censoring time, and death)
   ### We take the min of these as the event time
   ### It's an "event" if censoring happens, and "censored" if death happens (as we want to estimate the rate of censoring)
-  if (!("State.6" %in% colnames(data.raw))){
+  if (!("State.3" %in% colnames(data.raw))){
     data.raw <- data.raw %>%
-      mutate(State.5.noNA = case_when(is.na(State.5) ~ t.eval + 1,
-                                      TRUE ~ State.5),
-             model.cens.times = pmin(State.5.noNA, cens.times),
-             model.cens.s = case_when(cens.times <= State.5.noNA ~ 1,
-                                      cens.times > State.5.noNA ~ 0))
-  } else if ("State.6" %in% colnames(data.raw)){
+      mutate(State.2.noNA = case_when(is.na(State.2) ~ t.eval + 1,
+                                      TRUE ~ State.2),
+             model.cens.times = pmin(State.2.noNA, cens.times),
+             model.cens.s = case_when(cens.times <= State.2.noNA ~ 1,
+                                      cens.times > State.2.noNA ~ 0))
+  } else if ("State.3" %in% colnames(data.raw)){
     data.raw <- data.raw %>%
-      mutate(State.6.noNA = case_when(is.na(State.6) ~ t.eval + 1,
-                                      TRUE ~ State.6),
-             model.cens.times = pmin(State.6.noNA, cens.times),
-             model.cens.s = case_when(cens.times <= State.6.noNA ~ 1,
-                                      cens.times > State.6.noNA ~ 0))
+      mutate(State.2.noNA = case_when(is.na(State.3) ~ t.eval + 1,
+                                      TRUE ~ State.3),
+             model.cens.times = pmin(State.3.noNA, cens.times),
+             model.cens.s = case_when(cens.times <= State.3.noNA ~ 1,
+                                      cens.times > State.3.noNA ~ 0))
   }
   
   ###
@@ -3648,10 +3327,10 @@ calc.weights <- function(data.raw, t.eval, max.weight = 10){
   
   ### If individual has death prior to the time we are evaluating, assign weight at time of death
   ### Get location of individuals who had death prior to evaluation time (or censoring)
-  if (!("State.6" %in% colnames(data.raw))){
-    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.5.noNA < t.eval
-  } else if ("State.6" %in% colnames(data.raw)){
-    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.6.noNA < t.eval
+  if (!("State.3" %in% colnames(data.raw))){
+    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.2.noNA < t.eval
+  } else if ("State.3" %in% colnames(data.raw)){
+    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.3.noNA < t.eval
   }
   
   ###
@@ -3667,9 +3346,9 @@ calc.weights <- function(data.raw, t.eval, max.weight = 10){
   }
   
   ## Apply this function to all the times at which individuals have died prior to censoring, and assign to the appropriate individuals
-  if (!("State.6" %in% colnames(data.raw))){
+  if (!("State.3" %in% colnames(data.raw))){
     data.raw$pcw.mspec[obs.death.prior] <- sapply(data.raw$State.5.noNA[obs.death.prior], prob.uncens.func.mspec)
-  } else if ("State.6" %in% colnames(data.raw)){
+  } else if ("State.3" %in% colnames(data.raw)){
     data.raw$pcw.mspec[obs.death.prior] <- sapply(data.raw$State.6.noNA[obs.death.prior], prob.uncens.func.mspec)
   }
   
@@ -3704,13 +3383,13 @@ calc.weights <- function(data.raw, t.eval, max.weight = 10){
   }
   
   ## Apply this function to all the times at which individuals have died prior to censoring, and assign to the appropriate individuals
-  if (!("State.6" %in% colnames(data.raw))){
-    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.5.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
+  if (!("State.3" %in% colnames(data.raw))){
+    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.2.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
     #     mapply(prob.uncens.func.pspec, t = data.raw$State.5.noNA[obs.death.prior], 
     #                                                   patid = data.raw$patid[obs.death.prior])
     
-  } else if ("State.6" %in% colnames(data.raw)){
-    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.6.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
+  } else if ("State.3" %in% colnames(data.raw)){
+    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.3.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
     #       mapply(prob.uncens.func.pspec, t = data.raw$State.6.noNA[obs.death.prior], 
     #                                                   patid = data.raw$patid[obs.death.prior])
   }
@@ -3738,20 +3417,20 @@ calc.weights.stab <- function(data.raw, t.eval, max.weight = 10){
   ### We add a censoring time that would be observed from the data (this would be the min of censoring time, and death)
   ### We take the min of these as the event time
   ### It's an "event" if censoring happens, and "censored" if death happens (as we want to estimate the rate of censoring)
-  if (!("State.6" %in% colnames(data.raw))){
+  if (!("State.3" %in% colnames(data.raw))){
     data.raw <- data.raw %>%
-      mutate(State.5.noNA = case_when(is.na(State.5) ~ t.eval + 1,
-                                      TRUE ~ State.5),
-             model.cens.times = pmin(State.5.noNA, cens.times),
-             model.cens.s = case_when(cens.times <= State.5.noNA ~ 1,
-                                      cens.times > State.5.noNA ~ 0))
-  } else if ("State.6" %in% colnames(data.raw)){
+      mutate(State.2.noNA = case_when(is.na(State.2) ~ t.eval + 1,
+                                      TRUE ~ State.2),
+             model.cens.times = pmin(State.2.noNA, cens.times),
+             model.cens.s = case_when(cens.times <= State.2.noNA ~ 1,
+                                      cens.times > State.2.noNA ~ 0))
+  } else if ("State.3" %in% colnames(data.raw)){
     data.raw <- data.raw %>%
-      mutate(State.6.noNA = case_when(is.na(State.6) ~ t.eval + 1,
-                                      TRUE ~ State.6),
-             model.cens.times = pmin(State.6.noNA, cens.times),
-             model.cens.s = case_when(cens.times <= State.6.noNA ~ 1,
-                                      cens.times > State.6.noNA ~ 0))
+      mutate(State.3.noNA = case_when(is.na(State.3) ~ t.eval + 1,
+                                      TRUE ~ State.3),
+             model.cens.times = pmin(State.3.noNA, cens.times),
+             model.cens.s = case_when(cens.times <= State.3.noNA ~ 1,
+                                      cens.times > State.3.noNA ~ 0))
   }
   
   ###
@@ -3794,10 +3473,10 @@ calc.weights.stab <- function(data.raw, t.eval, max.weight = 10){
   
   ### If individual has death prior to the time we are evaluating, assign weight at time of death
   ### Get location of individuals who had death prior to evaluation time (or censoring)
-  if (!("State.6" %in% colnames(data.raw))){
-    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.5.noNA < t.eval
-  } else if ("State.6" %in% colnames(data.raw)){
-    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.6.noNA < t.eval
+  if (!("State.3" %in% colnames(data.raw))){
+    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.2.noNA < t.eval
+  } else if ("State.3" %in% colnames(data.raw)){
+    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.3.noNA < t.eval
   }
   
   ###
@@ -3815,10 +3494,10 @@ calc.weights.stab <- function(data.raw, t.eval, max.weight = 10){
   }
   
   ## Apply this function to all the times at which individuals have died prior to censoring, and assign to the appropriate individuals
-  if (!("State.6" %in% colnames(data.raw))){
-    data.raw$pcw.mspec[obs.death.prior] <- sapply(data.raw$State.5.noNA[obs.death.prior], prob.uncens.func.mspec)
-  } else if ("State.6" %in% colnames(data.raw)){
-    data.raw$pcw.mspec[obs.death.prior] <- sapply(data.raw$State.6.noNA[obs.death.prior], prob.uncens.func.mspec)
+  if (!("State.3" %in% colnames(data.raw))){
+    data.raw$pcw.mspec[obs.death.prior] <- sapply(data.raw$State.2.noNA[obs.death.prior], prob.uncens.func.mspec)
+  } else if ("State.3" %in% colnames(data.raw)){
+    data.raw$pcw.mspec[obs.death.prior] <- sapply(data.raw$State.3.noNA[obs.death.prior], prob.uncens.func.mspec)
   }
   
   ### Finally, assign an NA to individuals who are censored prior to time of interest
@@ -3852,13 +3531,13 @@ calc.weights.stab <- function(data.raw, t.eval, max.weight = 10){
   }
   
   ## Apply this function to all the times at which individuals have died prior to censoring, and assign to the appropriate individuals
-  if (!("State.6" %in% colnames(data.raw))){
-    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.5.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
+  if (!("State.3" %in% colnames(data.raw))){
+    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.2.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
     #     mapply(prob.uncens.func.pspec, t = data.raw$State.5.noNA[obs.death.prior], 
     #                                                   patid = data.raw$patid[obs.death.prior])
     
-  } else if ("State.6" %in% colnames(data.raw)){
-    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.6.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
+  } else if ("State.3" %in% colnames(data.raw)){
+    data.raw$pcw.pspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("State.3.noNA", "lp.pspec")], 1, FUN = prob.uncens.func.pspec)
     #       mapply(prob.uncens.func.pspec, t = data.raw$State.6.noNA[obs.death.prior], 
     #                                                   patid = data.raw$patid[obs.death.prior])
   }
@@ -3889,20 +3568,20 @@ calc.weights.DGMspec <- function(data.raw, t.eval, max.weight = 10, cens_shape, 
   ### We add a censoring time that would be observed from the data (this would be the min of censoring time, and death)
   ### We take the min of these as the event time
   ### It's an "event" if censoring happens, and "censored" if death happens (as we want to estimate the rate of censoring)
-  if (!("State.6" %in% colnames(data.raw))){
+  if (!("State.3" %in% colnames(data.raw))){
     data.raw <- data.raw %>%
-      mutate(State.5.noNA = case_when(is.na(State.5) ~ t.eval + 1,
-                                      TRUE ~ State.5),
-             model.cens.times = pmin(State.5.noNA, cens.times),
-             model.cens.s = case_when(cens.times <= State.5.noNA ~ 1,
-                                      cens.times > State.5.noNA ~ 0))
-  } else if ("State.6" %in% colnames(data.raw)){
+      mutate(State.2.noNA = case_when(is.na(State.2) ~ t.eval + 1,
+                                      TRUE ~ State.2),
+             model.cens.times = pmin(State.2.noNA, cens.times),
+             model.cens.s = case_when(cens.times <= State.2.noNA ~ 1,
+                                      cens.times > State.2.noNA ~ 0))
+  } else if ("State.3" %in% colnames(data.raw)){
     data.raw <- data.raw %>%
-      mutate(State.6.noNA = case_when(is.na(State.6) ~ t.eval + 1,
-                                      TRUE ~ State.6),
-             model.cens.times = pmin(State.6.noNA, cens.times),
-             model.cens.s = case_when(cens.times <= State.6.noNA ~ 1,
-                                      cens.times > State.6.noNA ~ 0))
+      mutate(State.3.noNA = case_when(is.na(State.3) ~ t.eval + 1,
+                                      TRUE ~ State.3),
+             model.cens.times = pmin(State.3.noNA, cens.times),
+             model.cens.s = case_when(cens.times <= State.3.noNA ~ 1,
+                                      cens.times > State.3.noNA ~ 0))
   }
   
   ### Create weights for the cohort at time t.eval
@@ -3911,10 +3590,10 @@ calc.weights.DGMspec <- function(data.raw, t.eval, max.weight = 10, cens_shape, 
   
   ### If individual has death prior to the time we are evaluating, assign weight at time of death
   ### Get location of individuals who had death prior to evaluation time (or censoring)
-  if (!("State.6" %in% colnames(data.raw))){
-    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.5.noNA < t.eval
-  } else if ("State.6" %in% colnames(data.raw)){
-    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.6.noNA < t.eval
+  if (!("State.3" %in% colnames(data.raw))){
+    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.2.noNA < t.eval
+  } else if ("State.3" %in% colnames(data.raw)){
+    obs.death.prior <- !is.na(data.raw$state.poly) & data.raw$State.3.noNA < t.eval
   }
   
   ###
@@ -3939,10 +3618,10 @@ calc.weights.DGMspec <- function(data.raw, t.eval, max.weight = 10, cens_shape, 
   
   ## Now apply this function to all the times at which individuals have died prior to censoring, and assign to the appropriate individuals
   Sys.time()
-  if (!("State.6" %in% colnames(data.raw))){
-    data.raw$pcw.DGMspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("x1", "x2", "State.5.noNA")], 1, FUN = prob_uncens_DGM)
-  } else if ("State.6" %in% colnames(data.raw)){
-    data.raw$pcw.DGMspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("x1", "x2", "State.6.noNA")], 1, FUN = prob_uncens_DGM)
+  if (!("State.3" %in% colnames(data.raw))){
+    data.raw$pcw.DGMspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("x1", "x2", "State.2.noNA")], 1, FUN = prob_uncens_DGM)
+  } else if ("State.3" %in% colnames(data.raw)){
+    data.raw$pcw.DGMspec[obs.death.prior] <- apply(data.raw[obs.death.prior, c("x1", "x2", "State.3.noNA")], 1, FUN = prob_uncens_DGM)
   }
   
   ### Invert these
