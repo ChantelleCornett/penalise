@@ -341,47 +341,17 @@ calc.true.transition.probs.DGM2 <- function(u.eval, t.eval, x1.eval, x2.eval, ou
     
     return(numerical.int.out$integral)
   }
+ 
   
   ###
-  ### Transition to state 4
-  P.14 <- function(u.in, t.in, x1, x2){
-    
-    ### First define the function we want to integrate over (we integrate it between u and t)
-    func.for.int <- function(r.in){
-      return(csh12(r.in, x1, x2)*(S1(r.in, x1, x2)/S1(u.in, x1, x2))*P.24(r.in, t.in, x1, x2))
-    }
-    
-    ### Do integration
-    numerical.int.out <- cubintegrate(f = func.for.int, lower = u.in, upper = t.in, method = "pcubature")
-    
-    return(numerical.int.out$integral)
-  }
-  
-  ###
-  ### Transition to state 5
-  P.15 <- function(u.in, t.in, x1, x2){
-    
-    ### First define the function we want to integrate over (we integrate it between u and t)
-    func.for.int <- function(r.in){
-      return(csh13(r.in, x1, x2)*(S1(r.in, x1, x2)/S1(u.in, x1, x2))*P.35(r.in, t.in, x1, x2))
-    }
-    
-    ### Do integration
-    numerical.int.out <- cubintegrate(f = func.for.int, lower = u.in, upper = t.in, method = "pcubature")
-    
-    return(numerical.int.out$integral)
-  }
-
-  
-  ###
-  ### Transitions to state 6
+  ### Transitions to state 3
   
   ## Direct
-  P.16.direct <- function(u.in, t.in, x1, x2){
+  P.13.direct <- function(u.in, t.in, x1, x2){
     
     ### First define the function we want to integrate over (we integrate it between u and t)
     func.for.int <- function(r.in){
-      return(csh16(r.in, x1, x2)*S1(r.in, x1, x2)/S1(u.in, x1, x2))
+      return(csh13(r.in, x1, x2)*S1(r.in, x1, x2)/S1(u.in, x1, x2))
     }
     
     ### Do integration
@@ -391,11 +361,11 @@ calc.true.transition.probs.DGM2 <- function(u.eval, t.eval, x1.eval, x2.eval, ou
   }
   
   ## Via 2 only
-  P.16.2 <- function(u.in, t.in, x1, x2){
+  P.13.2 <- function(u.in, t.in, x1, x2){
     
     ### First define the function we want to integrate over (we integrate it between u and t)
     func.for.int <- function(r.in){
-      return(csh12(r.in, x1, x2)*(S1(r.in, x1, x2)/S1(u.in, x1, x2))*P.26.direct(r.in, t.in, x1, x2))
+      return(csh12(r.in, x1, x2)*(S1(r.in, x1, x2)/S1(u.in, x1, x2))*P.23.direct(r.in, t.in, x1, x2))
     }
     
     ### Do integration
@@ -404,47 +374,7 @@ calc.true.transition.probs.DGM2 <- function(u.eval, t.eval, x1.eval, x2.eval, ou
     return(numerical.int.out$integral)
   }
   
-  ## Via 2 and 4
-  P.16.24 <- function(u.in, t.in, x1, x2){
-    
-    ### First define the function we want to integrate over (we integrate it between u and t)
-    func.for.int <- function(r.in){
-      return(csh12(r.in, x1, x2)*(S1(r.in, x1, x2)/S1(u.in, x1, x2))*P.26.4(r.in, t.in, x1, x2))
-    }
-    
-    ### Do integration
-    numerical.int.out <- cubintegrate(f = func.for.int, lower = u.in, upper = t.in, method = "pcubature")
-    
-    return(numerical.int.out$integral)
-  }
-  
-  ## Via 3 only
-  P.16.3 <- function(u.in, t.in, x1, x2){
-    
-    ### First define the function we want to integrate over (we integrate it between u and t)
-    func.for.int <- function(r.in){
-      return(csh13(r.in, x1, x2)*(S1(r.in, x1, x2)/S1(u.in, x1, x2))*P.36.direct(r.in, t.in, x1, x2))
-    }
-    
-    ### Do integration
-    numerical.int.out <- cubintegrate(f = func.for.int, lower = u.in, upper = t.in, method = "pcubature")
-    
-    return(numerical.int.out$integral)
-  }
-  
-  ## Via 3 and 5
-  P.16.35 <- function(u.in, t.in, x1, x2){
-    
-    ### First define the function we want to integrate over (we integrate it between u and t)
-    func.for.int <- function(r.in){
-      return(csh13(r.in, x1, x2)*(S1(r.in, x1, x2)/S1(u.in, x1, x2))*P.36.5(r.in, t.in, x1, x2))
-    }
-    
-    ### Do integration
-    numerical.int.out <- cubintegrate(f = func.for.int, lower = u.in, upper = t.in, method = "pcubature")
-    
-    return(numerical.int.out$integral)
-  }
+ 
   
   ## Combine all for transition probability from 1 to 5
   P.16 <- function(u.in, t.in, x1, x2){

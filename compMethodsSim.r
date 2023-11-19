@@ -1,6 +1,7 @@
 ##############################################################################
 ##               Comparative methods study on Penalisation                  ##
 ##                    Methods for Multi-State Models                        ##
+##                            Data Simulation                               ##
 ##                       Author: Chantelle Cornett                          ##
 ##                           Date: 12NOV2023                                ##
 ##############################################################################
@@ -89,3 +90,6 @@ msdat <-
     trans = tmat,
     status = c(NA, "illstat", "deathstat")
   )
+
+
+save(msdat, file = "msdat.Rdata")
