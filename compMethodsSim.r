@@ -51,7 +51,7 @@ df <- simmulti.msm(sim.df, qmatrix, death = c(3))
 
 df2 <- summaryBy(time ~ subject + state, FUN = c(sum), data = df)
 
-# Getting data into same format as ebmt3
+# Getting data into same format as ebmt4
 
 df3 <-
   pivot_wider(df2, names_from = state, values_from = c(time.sum)) # transpose
