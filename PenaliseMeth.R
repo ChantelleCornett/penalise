@@ -14,7 +14,7 @@
 ##############################################################################
 
 library(mstate)
-
+library(shrink)
 ###################################
 ##.     MLE NO SHRINKAGE         ##
 ###################################
@@ -28,3 +28,4 @@ noShrinkSimp <- coxph(Surv(Tstart, Tstop, status) ~ strata(trans) + genders*fact
 ##     UNIFORM SHRINKAGE         ##
 ###################################
 
+uniShrinkSimp <- shrink.coxph(fit = noShrinkSimp, type = "global", method = "jackknife", join = NULL, postfit = FALSE)
