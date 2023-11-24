@@ -16,6 +16,7 @@
 ##                       | 19NOV2023 | Using MSM to simulate data.          ##
 ##############################################################################
 
+# make hazards high so that it transitions fast.
 
 
 ######################################
@@ -25,82 +26,143 @@ library("msm")
 library("doBy")
 library("tidyr")
 
-# Transition matrix
+# Will do this via forking
+library("parallel")
 
-tmat <- trans.illdeath()
+detectCores() # 10 cores
+
+# Transition matrix
 
 # need to simulate event times for 100 people
 
-sim.df <-
-  data.frame(subject = rep(1:100, rep(13, 100)), time = rexp(100, 0.2)) %>% arrange(subject, time)
+n.cohort <- 200000
+n <- n.cohort
+max.follow <- 365
 
-# Transition rates
-lambda_h_i = 0.02  # Transition rate from healthy to illness
-mu_i_d = 0.01      # Transition rate from illness to death
+### Generate the data, but paralellise the process to improve speed (note I could move to CSF at a later date if this process is highly time consuming,
+### but at the moment I think other things require the CSF more (fitting the actual multistate models))
+print("START DATA GEN")
+cl <- makeCluster(5)
+registerDoParallel(5)
+start_time_fit_parallel <- Sys.time()
 
-# Q-matrix
-qmatrix <- matrix(
-  c(-lambda_h_i, lambda_h_i, 0,
-    0,-mu_i_d, mu_i_d,
-    0, 0, 0),
-  nrow = 3,
-  byrow = TRUE
-)
+data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE, 
+                             .packages=c("gems", "dplyr")) %dopar%{
+                               
+x.baseline <- data.frame("BMI" = rnorm(n.cohort, 24, 4),
+                         "age" = sample(c(1,2,3),n.cohort, replace = TRUE, prob = c(0.332,0.531,0.137 )),
+                         "gender" = sample(c(0,1),n.cohort, replace = TRUE, prob = c(0.5,0.5)))
+bl <- x.baseline
+### Baseline hazards
+shape12 <- 1
+scale12 <- 0.219
 
-df <- simmulti.msm(sim.df, qmatrix, death = c(3))
+shape13 <- 1
+scale13 <- 0.219
 
-df2 <- summaryBy(time ~ subject + state, FUN = c(sum), data = df)
+shape23 <- 1
+scale23 <- 0.233
 
-# Getting data into same format as ebmt4
+## Covariate effects
+beta12.x1 <- 0.5
+beta12.x2 <- 0.5
+beta12.x3 <- 0.5
+beta13.x1 <- 0.5
+beta13.x2 <- 0.5
+beta13.x3 <- 0.5
+beta23.x1 <- 0.5
+beta23.x2 <- 0.5
+beta23.x3 <- 0.5
+x.in <- x.baseline
+numsteps <- max.follow
+## Generate an empty hazard matrix
+hf <- generateHazardMatrix(3)
+#hf
 
-df3 <-
-  pivot_wider(df2, names_from = state, values_from = c(time.sum)) # transpose
-df3 <-
-  df3[, !(names(df3) %in% c('3'))] # remove 'time' spent in state 3
-df3$'2' <- df3$'2'+df3$'1' # cumulative time to state 3
-colnames(df3) <- c('subject', 'timeToIll', 'timeToDeath')
-df3$timeToDeath <-
-  replace_na(df3$timeToDeath, replace = 200) # set missing vals to a large number
+## Change the entries of the transitions we want to allow
+## Define the transitions as weibull
+hf[[1, 2]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
 
-# create indicator variables for transitions to state 2 and 3
-counts <- as.data.frame(table(df2$subject))
-colnames(counts) <- c("subject", "count")
-df4 <- merge(df3, counts, by = c("subject"))
+hf[[1, 3]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
 
-for (i in 1:length(df4$subject)) {
-  if (df4$count[i] == 1) {
-    df4$illstat[i] <- 0
-    df4$deathstat[i] <- 0
-  } else if (df4$count[i] == 2) {
-    df4$illstat[i] <- 1
-    df4$deathstat[i] <- 0
-  } else if (df4$count[i] == 3) {
-    df4$illstat[i] <- 1
-    df4$deathstat[i] <- 1
-  }
-}
+hf[[2, 3]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
 
-# Get data in format suitable for use by mstate
+## Generate an empty parameter matrix
+par <- generateParameterMatrix(hf)
 
-msdat <-
-  msprep(
-    data = df4,
-    id = "subject",
-    time = c(NA, "timeToIll", "timeToDeath"),
-    trans = tmat,
-    status = c(NA, "illstat", "deathstat")
-  )
+## Use the vector of scales in each transition hazard
+par[[1, 2]] <- list(shape = shape12, scale = scale12, 
+                    beta.x1 = beta12.x1, beta.x2 = beta12.x2, beta.x3 = beta12.x3)
+par[[1, 3]] <- list(shape = shape13, scale = scale13, 
+                    beta.x1 = beta13.x1, beta.x2 = beta13.x2, beta.x3 = beta13.x3)
+par[[2, 3]] <- list(shape = shape23, scale = scale23, 
+                    beta.x1 = beta23.x1, beta.x2 = beta23.x2, beta.x3 = beta23.x3)
 
-# Adding in covariates
+## Generate the cohort
 
-agecat <- c("<=20","20-40",">40")
-id <- as.data.frame(seq(1,100,1))
-gender <- c(0,1)
+cohort <- simulateCohort(transitionFunctions = hf, parameters = par,
+                         cohortSize = n, baseline = bl, to = max.follow, sampler.steps = numsteps)
+cohort.out <- data.frame(cohort@time.to.state, cohort@baseline, patid = 1:nrow(cohort@time.to.state))
+  
+  ## Turn event times into a dataframe and make the colnames not have any spaces in them
+  dat.mstate.temp <- select(cohort.out, paste("State.", 1:3, sep = ""))
+  colnames(dat.mstate.temp) <- paste0("state", 1:3)
+  
+  ## Now set any transitions that didn't happen to the maximum value of follow up
+  ## Therefore any event that happens, will happen before this. If a transition never happens, an individual will be censored
+  ## at this point in time (when follow up stops)
+  dat.mstate.temp.noNA <- dat.mstate.temp
+  dat.mstate.temp.noNA <- data.frame(t(apply(dat.mstate.temp.noNA, 1, function(x) {ifelse(is.na(x), n.cohort, x)})))
 
-# ages
-ages <- as.data.frame(sample(agecat, 100, replace = TRUE, prob = c(0.332,0.531,0.137 )))
-genders <- as.data.frame(sample(gender, 100, replace = TRUE, prob = c(0.5,0.5)))
-agedat <- cbind(id, ages, genders)
-colnames(agedat) <- c("subject","ages","genders")
-msdat <- merge(msdat, agedat, by = c("subject"))
-save(msdat, file = "msdat.Rdata")
+  
+  ## Add censoring variables
+  dat.mstate.temp.noNA[(ncol(dat.mstate.temp)+1):(ncol(dat.mstate.temp)*2)] <- matrix(0, ncol = ncol(dat.mstate.temp), nrow = nrow(dat.mstate.temp))
+
+  colnames(dat.mstate.temp.noNA)[4:6] <- 
+    paste0("state", 1:3, ".s")
+  
+  
+  ## If it is not an NA value (from original dataset), set the censoring indicator to 1
+    dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,2]),(2+ncol(dat.mstate.temp))] <- 1
+    dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,3]),(3+ncol(dat.mstate.temp))] <- 1
+  
+  ## Rename dataset to what it was before, and remove excess dataset
+  dat.mstate.temp <- dat.mstate.temp.noNA
+  
+  ## Now need to add baseline data
+  dat.mstate.temp$age <- cohort.out$age
+  dat.mstate.temp$gender <- cohort.out$gender
+  dat.mstate.temp$BMI <- cohort.out$BMI
+  dat.mstate.temp$patid <- cohort.out$patid
+  
+  ### Now we can use msprep from the mstate package to turn into wide format
+  ## First create a transition matrix corresponding to the columns
+  tmat <- trans.illdeath()
+
+  ## Now can prepare the data into wide format
+  dat.mstate.temp.wide <- msprep(dat.mstate.temp, trans = tmat, 
+                                 time = c(NA, paste0("state", 2:3)),
+                                 status = c(NA, paste0("state", 2:3, ".s")), 
+                                 keep = c("age","gender", "BMI","patid"))
+  
+  ## Want to expand the covariates to allow different covariate effects per transition
+  covs <- c("age", "gender", "BMI")
+  dat.mstate.temp.wide <- expand.covs(dat.mstate.temp.wide, covs, longnames = FALSE)
+  dat.mstate.temp.wide
+  
+})
+
+end_time_fit_parallel <- Sys.time()
+diff_fit_parallel <- start_time_fit_parallel - end_time_fit_parallel
+stopCluster(cl)
+print("FINISH DATA GEN")
+diff_fit_parallel
+
+### Combine data into one data frame
+temp.data.cohort <- rbind(data_parallel_list[[1]],data_parallel_list[[2]],data_parallel_list[[3]],data_parallel_list[[4]],data_parallel_list[[5]])
+### Assign patient ID's and remove rownames
+temp.data.cohort$patid <- 1:nrow(temp.data.cohort)
+rownames(temp.data.cohort) <- NULL
