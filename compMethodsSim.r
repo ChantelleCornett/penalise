@@ -14,6 +14,7 @@
 ##                       | 14NOV2023 | First simulation                     ##
 ##                       | 16NOV2023 | Using Alex's code                    ##
 ##                       | 19NOV2023 | Using MSM to simulate data.          ##
+##                       | 24NOV2023 | Add Weibull and parallelise.         ##
 ##############################################################################
 
 # make hazards high so that it transitions fast.
