@@ -94,9 +94,6 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                beta35.x1 <- 0.5
                                beta35.x2 <- 0.5
                                beta35.x3 <- 0.5
-            ###################################################################
-            ##                  UPDATED TO HERE                              ##
-            ###################################################################
                                
                                x.in <- x.baseline
                                numsteps <- max.follow
@@ -109,10 +106,22 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                hf[[1, 2]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
                                  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
                                
-                               hf[[1, 3]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+                               hf[[2, 3]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
                                  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
                                
-                               hf[[2, 3]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+                               hf[[3, 4]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+                                 exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
+                               
+                               hf[[4, 5]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+                                 exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
+                               
+                               hf[[1, 5]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+                                 exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
+                               
+                               hf[[2, 5]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
+                                 exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
+                               
+                               hf[[3, 5]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
                                  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
                                
                                ## Generate an empty parameter matrix
@@ -121,10 +130,18 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                ## Use the vector of scales in each transition hazard
                                par[[1, 2]] <- list(shape = shape12, scale = scale12, 
                                                    beta.x1 = beta12.x1, beta.x2 = beta12.x2, beta.x3 = beta12.x3)
-                               par[[1, 3]] <- list(shape = shape13, scale = scale13, 
-                                                   beta.x1 = beta13.x1, beta.x2 = beta13.x2, beta.x3 = beta13.x3)
                                par[[2, 3]] <- list(shape = shape23, scale = scale23, 
                                                    beta.x1 = beta23.x1, beta.x2 = beta23.x2, beta.x3 = beta23.x3)
+                               par[[3, 4]] <- list(shape = shape34, scale = scale34, 
+                                                   beta.x1 = beta34.x1, beta.x2 = beta34.x2, beta.x3 = beta34.x3)
+                               par[[4, 5]] <- list(shape = shape45, scale = scale45, 
+                                                   beta.x1 = beta45.x1, beta.x2 = beta45.x2, beta.x3 = beta45.x3)
+                               par[[1, 5]] <- list(shape = shape15, scale = scale15, 
+                                                   beta.x1 = beta15.x1, beta.x2 = beta15.x2, beta.x3 = beta15.x3)
+                               par[[2, 5]] <- list(shape = shape25, scale = scale25, 
+                                                   beta.x1 = beta25.x1, beta.x2 = beta25.x2, beta.x3 = beta25.x3)
+                               par[[3, 5]] <- list(shape = shape35, scale = scale35, 
+                                                   beta.x1 = beta35.x1, beta.x2 = beta35.x2, beta.x3 = beta35.x3)
                                
                                ## Generate the cohort
                                
@@ -133,8 +150,8 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                cohort.out <- data.frame(cohort@time.to.state, cohort@baseline, patid = 1:nrow(cohort@time.to.state))
                                
                                ## Turn event times into a dataframe and make the colnames not have any spaces in them
-                               dat.mstate.temp <- select(cohort.out, paste("State.", 1:3, sep = ""))
-                               colnames(dat.mstate.temp) <- paste0("state", 1:3)
+                               dat.mstate.temp <- select(cohort.out, paste("State.", 1:5, sep = ""))
+                               colnames(dat.mstate.temp) <- paste0("state", 1:5)
                                
                                ## Now set any transitions that didn't happen to the maximum value of follow up
                                ## Therefore any event that happens, will happen before this. If a transition never happens, an individual will be censored
@@ -146,9 +163,11 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                ## Add censoring variables
                                dat.mstate.temp.noNA[(ncol(dat.mstate.temp)+1):(ncol(dat.mstate.temp)*2)] <- matrix(0, ncol = ncol(dat.mstate.temp), nrow = nrow(dat.mstate.temp))
                                
-                               colnames(dat.mstate.temp.noNA)[4:6] <- 
-                                 paste0("state", 1:3, ".s")
-                               
+                               colnames(dat.mstate.temp.noNA)[6:11] <- 
+                                 paste0("state", 1:5, ".s")
+                               ###################################################################
+                               ##                  UPDATED TO HERE                              ##
+                               ###################################################################
                                
                                ## If it is not an NA value (from original dataset), set the censoring indicator to 1
                                dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,2]),(2+ncol(dat.mstate.temp))] <- 1
