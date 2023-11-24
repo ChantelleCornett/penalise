@@ -17,24 +17,16 @@
 ##                       | 24NOV2023 | Add Weibull and parallelise.         ##
 ##############################################################################
 
-# make hazards high so that it transitions fast.
-
-
 ######################################
 ##          DATA SIMULATION         ##
 ######################################
 library("msm")
-library("doBy")
 library("tidyr")
 
 # Will do this via forking
 library("parallel")
 
 detectCores() # 10 cores
-
-# Transition matrix
-
-# need to simulate event times for 100 people
 
 n.cohort <- 200000
 n <- n.cohort
@@ -54,6 +46,7 @@ x.baseline <- data.frame("BMI" = rnorm(n.cohort, 24, 4),
                          "age" = sample(c(1,2,3),n.cohort, replace = TRUE, prob = c(0.332,0.531,0.137 )),
                          "gender" = sample(c(0,1),n.cohort, replace = TRUE, prob = c(0.5,0.5)))
 bl <- x.baseline
+
 ### Baseline hazards
 shape12 <- 1
 scale12 <- 0.219
