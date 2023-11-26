@@ -163,7 +163,7 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                ## Add censoring variables
                                dat.mstate.temp.noNA[(ncol(dat.mstate.temp)+1):(ncol(dat.mstate.temp)*2)] <- matrix(0, ncol = ncol(dat.mstate.temp), nrow = nrow(dat.mstate.temp))
                                
-                               colnames(dat.mstate.temp.noNA)[6:11] <- 
+                               colnames(dat.mstate.temp.noNA)[6:10] <- 
                                  paste0("state", 1:5, ".s")
                                ###################################################################
                                ##                  UPDATED TO HERE                              ##
@@ -172,6 +172,8 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                ## If it is not an NA value (from original dataset), set the censoring indicator to 1
                                dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,2]),(2+ncol(dat.mstate.temp))] <- 1
                                dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,3]),(3+ncol(dat.mstate.temp))] <- 1
+                               dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,4]),(4+ncol(dat.mstate.temp))] <- 1
+                               dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,5]),(5+ncol(dat.mstate.temp))] <- 1
                                
                                ## Rename dataset to what it was before, and remove excess dataset
                                dat.mstate.temp <- dat.mstate.temp.noNA
@@ -184,12 +186,13 @@ data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE,
                                
                                ### Now we can use msprep from the mstate package to turn into wide format
                                ## First create a transition matrix corresponding to the columns
-                               tmat <- trans.illdeath()
+                               tmat <- matrix(c(NA,NA,NA,NA,NA,1,NA,NA,NA,NA,2,5,NA,NA,NA,3,6,8,NA,NA,4,7,9,10,NA),
+                                              nrow=5, ncol = 5)
                                
                                ## Now can prepare the data into wide format
                                dat.mstate.temp.wide <- msprep(dat.mstate.temp, trans = tmat, 
-                                                              time = c(NA, paste0("state", 2:3)),
-                                                              status = c(NA, paste0("state", 2:3, ".s")), 
+                                                              time = c(NA, paste0("state", 2:5)),
+                                                              status = c(NA, paste0("state", 2:5, ".s")), 
                                                               keep = c("age","gender", "BMI","patid"))
                                
                                ## Want to expand the covariates to allow different covariate effects per transition
@@ -210,3 +213,4 @@ temp.data.cohort <- rbind(data_parallel_list[[1]],data_parallel_list[[2]],data_p
 ### Assign patient ID's and remove rownames
 temp.data.cohort$patid <- 1:nrow(temp.data.cohort)
 rownames(temp.data.cohort) <- NULL
+save(temp.data.cohort, file = "5state.csv")
