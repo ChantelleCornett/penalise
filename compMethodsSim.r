@@ -160,3 +160,5 @@ temp.data.cohort <- rbind(data_parallel_list[[1]],data_parallel_list[[2]],data_p
 ### Assign patient ID's and remove rownames
 temp.data.cohort$patid <- 1:nrow(temp.data.cohort)
 rownames(temp.data.cohort) <- NULL
+
+save(temp.data.cohort, file="3state.csv")
