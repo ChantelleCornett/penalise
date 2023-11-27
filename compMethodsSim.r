@@ -48,14 +48,14 @@ x.baseline <- data.frame("BMI" = rnorm(n.cohort, 24, 4),
 bl <- x.baseline
 
 ### Baseline hazards
-shape12 <- 1
-scale12 <- 0.219
+shape12 <- 20
+scale12 <- 20
 
-shape13 <- 1
-scale13 <- 0.219
+shape13 <- 20
+scale13 <- 20
 
-shape23 <- 1
-scale23 <- 0.233
+shape23 <- 20
+scale23 <- 25
 
 ## Covariate effects
 beta12.x1 <- 0.5
@@ -149,6 +149,8 @@ cohort.out <- data.frame(cohort@time.to.state, cohort@baseline, patid = 1:nrow(c
   
 })
 
+
+
 end_time_fit_parallel <- Sys.time()
 diff_fit_parallel <- start_time_fit_parallel - end_time_fit_parallel
 stopCluster(cl)
@@ -161,4 +163,4 @@ temp.data.cohort <- rbind(data_parallel_list[[1]],data_parallel_list[[2]],data_p
 temp.data.cohort$patid <- 1:nrow(temp.data.cohort)
 rownames(temp.data.cohort) <- NULL
 
-save(temp.data.cohort, file="3state.csv")
+save(temp.data.cohort, file="3state.Rdata")
