@@ -19,7 +19,7 @@ library(survival)
 library(glmnet)
 library(rrpack)
 library(brms)
-source("redrank.R")
+library(dplyr)
 msdat <- temp.data.cohort
 
 
@@ -32,9 +32,9 @@ msdat$event <- msdat$status
 ###################################
 
 # make a cox proportional hazards model with multiple outcomes
-noShrinkSimp <-
+noShrinkSimp2 <-
   coxph(
-    Surv(entry, exit, event) ~ strata(trans) + gender * factor(trans) + age *
+    Surv(entry, exit, event) ~  gender * factor(trans) + age *
       factor(trans) + BMI * factor(trans),
     data = msdat,
     method = "breslow",
@@ -48,13 +48,14 @@ noShrinkSimp <-
 options(warn=1)
 uniShrinkSimp <-
   shrink.coxph(
-    fit = noShrinkSimp,
+    fit = noShrinkSimp2,
     type = "global",
     join = NULL,
     method = "jackknife",
     postfit = TRUE,
     notes = TRUE
   )
+
 
 
 ###################################
@@ -67,27 +68,9 @@ X <- msdat[, c("trans", "gender", "age", "BMI")]
 
 # 10-FOLD CROSS VALIDATION FOR OPTIMAL VALUE OF LAMBDA
 xmat <- as.matrix(X)
-ysurv <- msdat[, c("Tstop", "status")]
-cvfit <- cv.glmnet(xmat, ysurv, family = "cox", type.measure = "C")
-lassoSimp <-
-  penMSM(
-    type = "lasso",
-    d,
-    X,
-    PSM1,
-    PSM2,
-    lambda1,
-    lambda2,
-    w,
-    betastart,
-    nu = 0.5,
-    tol = 1e-10,
-    max.iter = 50,
-    trace = TRUE,
-    diagnostics = TRUE,
-    family = "coxph",
-    constant.approx = 1e-8
-  )
+y <- cbind(time = msdat$Tstop, status = msdat$status)
+cvfit <- cv.glmnet(x=X, y=y, family = "cox", type.measure = "C", data=msdat, parallel = TRUE, alpha = 1)
+final_model <- glmnet(x=X, y=y, family = "cox", data = msdat, lambda = 0.007408425, alpha = 1)
 
 ##########################################
 ##   FUSED LASSO PENALISED LIKELIHOOD   ##
@@ -122,7 +105,7 @@ fusedSimp <-
 # The reduced rank 2 solution
 rr2 <-
   redrank(
-    Surv(Tstart, Tstop, status) ~ strata(trans) + gender * factor(trans) + age *
+    Surv(Tstart, Tstop, status) ~  gender * factor(trans) + age *
       factor(trans) + BMI * factor(trans),
     data = msdat,
     R = 2
@@ -132,18 +115,6 @@ rr2$Gamma
 rr2$Beta
 rr2$loglik
 
-# The full rank solution
-rr3 <-
-  myredrank(
-    Surv(entry, exit, event) ~ strata(trans) + genders * factor(trans) + ages *
-      factor(trans),
-    data = msdat,
-    R = 3
-  )
-rr3$Alpha
-rr3$Gamma
-rr3$Beta
-rr3$loglik
 
 ###################################
 ##      BAYESIAN APPROACH        ##
