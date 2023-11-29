@@ -164,7 +164,7 @@ fit <-
     data = msdat,
     family = brms::cox(),
     chains = 2,
-    warmup = 10,
+    warmup = 1000,
     seed = 123,
     prior = prior_covshrink
   )
