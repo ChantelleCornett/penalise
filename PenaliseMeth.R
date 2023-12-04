@@ -20,6 +20,8 @@ library(glmnet)
 library(rrpack)
 library(brms)
 library(dplyr)
+library(hdnom)
+library(penalized)
 msdat <- temp.data.cohort
 
 
@@ -32,7 +34,7 @@ msdat$event <- msdat$status
 ###################################
 
 # make a cox proportional hazards model with multiple outcomes
-noShrinkSimp2 <-
+noShrinkSimp <-
   coxph(
     Surv(entry, exit, event) ~  gender * factor(trans) + age *
       factor(trans) + BMI * factor(trans),
@@ -45,58 +47,38 @@ noShrinkSimp2 <-
 ##     UNIFORM SHRINKAGE         ##
 ###################################
 
-options(warn=1)
-uniShrinkSimp <-
-  shrink.coxph(
-    fit = noShrinkSimp2,
-    type = "global",
-    join = NULL,
-    method = "jackknife",
-    postfit = TRUE,
-    notes = TRUE
-  )
+# finds maximum number of transitions from transition matrix
 
+tmat <- trans.illdeath()
+
+n_trans <- max(tmat, na.rm = TRUE)
+
+fits_wei <- vector(mode = "list", length = n_trans)
+
+# fits models subsetting data on the number of transitions 
+for (i in 1:n_trans){
+  fits_wei[[i]] <- coxph(Surv(entry, exit, event) ~  factor(gender) + factor(age)+ BMI,
+                         method = "breslow",
+                         data = subset(msdat, trans == i))
+}
 
 
 ###################################
 ##  LASSO PENALISED LIKELIHOOD   ##
 ###################################
 
-# PRE-PROCESSING DATA
-d <- msdat[, c("entry", "exit", "trans", "event")]
 X <- msdat[, c("trans", "gender", "age", "BMI")]
-
-# 10-FOLD CROSS VALIDATION FOR OPTIMAL VALUE OF LAMBDA
-xmat <- as.matrix(X)
 y <- cbind(time = msdat$Tstop, status = msdat$status)
 cvfit <- cv.glmnet(x=X, y=y, family = "cox", type.measure = "C", data=msdat, parallel = TRUE, alpha = 1)
 final_model <- glmnet(x=X, y=y, family = "cox", data = msdat, lambda = 0.007408425, alpha = 1)
+lassoSimp <- final_model
 
 ##########################################
 ##   FUSED LASSO PENALISED LIKELIHOOD   ##
 ##########################################
 
-fusedSimp <-
-  penMSM(
-    type = "fused",
-    d,
-    X,
-    PSM1,
-    PSM2,
-    lambda1,
-    lambda2,
-    w,
-    betastart,
-    nu = 0.5,
-    tol = 1e-10,
-    max.iter = 50,
-    trace = TRUE,
-    diagnostics = TRUE,
-    family = "coxph",
-    poissonresponse = NULL,
-    poissonoffset = NULL,
-    constant.approx = 1e-8
-  )
+opt <- optL1(Surv(msdat$Tstop, msdat$status),fusedl = TRUE, penalized = msdat, fold = 3, lambda2 = 1)
+coefficients(opt$fullfit)
 
 ###################################
 ##      REDUCED RANK METHOD      ##
@@ -105,11 +87,12 @@ fusedSimp <-
 # The reduced rank 2 solution
 rr2 <-
   redrank(
-    Surv(Tstart, Tstop, status) ~  gender * factor(trans) + age *
+    Surv(Tstart, Tstop, status) ~  factor(trans) + gender * factor(trans) + age *
       factor(trans) + BMI * factor(trans),
-    data = msdat,
-    R = 2
+    data = na.exclude(msdat),
+    R = 0
   )
+
 rr2$Alpha
 rr2$Gamma
 rr2$Beta
