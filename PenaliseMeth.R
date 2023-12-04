@@ -13,6 +13,11 @@
 ## Chantelle Cornett     | 19NOV2023 | File initialisation                  ##
 ##############################################################################
 
+url <- "https://cran.r-project.org/src/contrib/Archive/apricom/apricom_1.0.0.tar.gz"
+install.packages(url, type="source", repos=NULL)  
+library(devtools)
+devtools::load_all("/Users/m13477cc/Downloads/apricom/R")
+library(apricom)
 library(mstate)
 library(shrink)
 library(survival)
@@ -55,11 +60,18 @@ n_trans <- max(tmat, na.rm = TRUE)
 
 fits_wei <- vector(mode = "list", length = n_trans)
 
+s <- 1 - (length(noShrinkSimp$coefficients)/ 2267749)
+
 # fits models subsetting data on the number of transitions 
 for (i in 1:n_trans){
   fits_wei[[i]] <- coxph(Surv(entry, exit, event) ~  factor(gender) + factor(age)+ BMI,
                          method = "breslow",
                          data = subset(msdat, trans == i))
+}
+
+for (i in 1:n_trans){
+  for (j in 1:4){
+  fits_wei[[i]]$coefficients[j] <- fits_wei[[i]]$coefficients[j] * s}
 }
 
 
