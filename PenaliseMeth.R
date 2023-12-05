@@ -88,9 +88,8 @@ lassoSimp <- final_model
 ##########################################
 ##   FUSED LASSO PENALISED LIKELIHOOD   ##
 ##########################################
-
-opt <- optL1(Surv(msdat$Tstop, msdat$status),fusedl = TRUE, penalized = msdat, fold = 3, lambda2 = 1)
-coefficients(opt$fullfit)
+fused <- penalized(Surv(entry, exit, event), penalized = ~ factor(gender) + factor(age)+ BMI, data = msdat, 
+                   lambda1 = 1, lambda2 = 2, fusedl = TRUE)
 
 ###################################
 ##      REDUCED RANK METHOD      ##
@@ -99,10 +98,9 @@ coefficients(opt$fullfit)
 # The reduced rank 2 solution
 rr2 <-
   redrank(
-    Surv(Tstart, Tstop, status) ~  factor(trans) + gender * factor(trans) + age *
-      factor(trans) + BMI * factor(trans),
+    Surv(Tstart, Tstop, status) ~  as.factor(gender) + as.factor(age) + BMI,
     data = na.exclude(msdat),
-    R = 0
+    R = 2
   )
 
 rr2$Alpha
