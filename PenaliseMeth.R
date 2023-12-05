@@ -26,7 +26,9 @@ library(rrpack)
 library(brms)
 library(dplyr)
 library(hdnom)
+library(parallel)
 library(penalized)
+library(doParallel)
 msdat <- temp.data.cohort
 
 
@@ -85,11 +87,6 @@ cvfit <- cv.glmnet(x=X, y=y, family = "cox", type.measure = "C", data=msdat, par
 final_model <- glmnet(x=X, y=y, family = "cox", data = msdat, lambda = 0.007408425, alpha = 1)
 lassoSimp <- final_model
 
-##########################################
-##   FUSED LASSO PENALISED LIKELIHOOD   ##
-##########################################
-fused <- penalized(Surv(entry, exit, event), penalized = ~ factor(gender) + factor(age)+ BMI, data = msdat, 
-                   lambda1 = 1, lambda2 = 2, fusedl = TRUE)
 
 ###################################
 ##      REDUCED RANK METHOD      ##
