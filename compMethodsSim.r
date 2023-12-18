@@ -1,166 +1,188 @@
-##############################################################################
-##               Comparative methods study on Penalisation                  ##
-##                    Methods for Multi-State Models                        ##
-##                            Data Simulation                               ##
-##                       Author: Chantelle Cornett                          ##
-##                           Date: 12NOV2023                                ##
-##############################################################################
+# Data for a 3-state (Stable, Progression, Death) oncology model
 
-##############################################################################
-## Change Log:                                                              ##
-## Person                |   Date    | Changes Made                         ##
-## _________________________________________________________________________##
-## Chantelle Cornett     | 12NOV2023 | File initialisation                  ##
-##                       | 14NOV2023 | First simulation                     ##
-##                       | 16NOV2023 | Using Alex's code                    ##
-##                       | 19NOV2023 | Using MSM to simulate data.          ##
-##                       | 24NOV2023 | Add Weibull and parallelise.         ##
-##############################################################################
+library("flexsurv")
+library("hesim")
+library("data.table")
 
-######################################
-##          DATA SIMULATION         ##
-######################################
-library("msm")
-library("tidyr")
-
-# Will do this via forking
-library("parallel")
-
-detectCores() # 10 cores
-
-n.cohort <- 200000
-n <- n.cohort
-max.follow <- 365
-
-### Generate the data, but paralellise the process to improve speed (note I could move to CSF at a later date if this process is highly time consuming,
-### but at the moment I think other things require the CSF more (fitting the actual multistate models))
-print("START DATA GEN")
-cl <- makeCluster(5)
-registerDoParallel(5)
-start_time_fit_parallel <- Sys.time()
-
-data_parallel_list<-(foreach(input=1:5, .combine=list, .multicombine=TRUE, 
-                             .packages=c("gems", "dplyr")) %dopar%{
-                               
-x.baseline <- data.frame("BMI" = rnorm(n.cohort, 24, 4),
-                         "age" = sample(c(1,2,3),n.cohort, replace = TRUE, prob = c(0.332,0.531,0.137 )),
-                         "gender" = sample(c(0,1),n.cohort, replace = TRUE, prob = c(0.5,0.5)))
-bl <- x.baseline
-
-### Baseline hazards
-shape12 <- 20
-scale12 <- 20
-
-shape13 <- 20
-scale13 <- 20
-
-shape23 <- 20
-scale23 <- 25
-
-## Covariate effects
-beta12.x1 <- 0.5
-beta12.x2 <- 0.5
-beta12.x3 <- 0.5
-beta13.x1 <- 0.5
-beta13.x2 <- 0.5
-beta13.x3 <- 0.5
-beta23.x1 <- 0.5
-beta23.x2 <- 0.5
-beta23.x3 <- 0.5
-x.in <- x.baseline
-numsteps <- max.follow
-## Generate an empty hazard matrix
-hf <- generateHazardMatrix(3)
-#hf
-
-## Change the entries of the transitions we want to allow
-## Define the transitions as weibull
-hf[[1, 2]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
-  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-
-hf[[1, 3]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
-  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-
-hf[[2, 3]] <- function(t, shape, scale, beta.x1, beta.x2, beta.x3) {
-  exp(bl["age"]*beta.x1 - bl["gender"]*beta.x2 + bl["BMI"]*beta.x3)*(shape/scale)*((t + sum(history))/scale)^(shape - 1)}
-
-## Generate an empty parameter matrix
-par <- generateParameterMatrix(hf)
-
-## Use the vector of scales in each transition hazard
-par[[1, 2]] <- list(shape = shape12, scale = scale12, 
-                    beta.x1 = beta12.x1, beta.x2 = beta12.x2, beta.x3 = beta12.x3)
-par[[1, 3]] <- list(shape = shape13, scale = scale13, 
-                    beta.x1 = beta13.x1, beta.x2 = beta13.x2, beta.x3 = beta13.x3)
-par[[2, 3]] <- list(shape = shape23, scale = scale23, 
-                    beta.x1 = beta23.x1, beta.x2 = beta23.x2, beta.x3 = beta23.x3)
-
-## Generate the cohort
-
-cohort <- simulateCohort(transitionFunctions = hf, parameters = par,
-                         cohortSize = n, baseline = bl, to = max.follow, sampler.steps = numsteps)
-cohort.out <- data.frame(cohort@time.to.state, cohort@baseline, patid = 1:nrow(cohort@time.to.state))
+# Simulate multi-state dataset -------------------------------------------------
+sim_onc3_data <- function(n = 200000, seed = NULL){
   
-  ## Turn event times into a dataframe and make the colnames not have any spaces in them
-  dat.mstate.temp <- select(cohort.out, paste("State.", 1:3, sep = ""))
-  colnames(dat.mstate.temp) <- paste0("state", 1:3)
+  if (!is.null(seed)) set.seed(seed)
   
-  ## Now set any transitions that didn't happen to the maximum value of follow up
-  ## Therefore any event that happens, will happen before this. If a transition never happens, an individual will be censored
-  ## at this point in time (when follow up stops)
-  dat.mstate.temp.noNA <- dat.mstate.temp
-  dat.mstate.temp.noNA <- data.frame(t(apply(dat.mstate.temp.noNA, 1, function(x) {ifelse(is.na(x), n.cohort, x)})))
+  # Data 
+  age_mu <- 60
+  data <- data.table(
+    intercept = 1,
+    strategy_id = 1,
+    strategy_name = sample(c("SOC", "New 1", "New 2"), n, replace = TRUE,
+                           prob = c(1/3, 1/3, 1/3)),
+    patient_id = 1:n,
+    gender = rbinom(n, 1, .5),
+    age = sample(c(1,2,3), n, replace=TRUE),
+    BMI = rnorm(n, mean = 24, sd = 3)
+  )
+  data[, `:=` (new1 = ifelse(strategy_name == "New 1", 1, 0),
+               new2 = ifelse(strategy_name == "New 2", 1, 0))]
+  attr(data, "id_vars") <- c("strategy_id", "patient_id")
+  
+  # Transition matrix
+  tmat <- rbind(
+    c(NA, 1,  2),
+    c(NA,  NA, 3),
+    c(NA, NA, NA)
+  )
+  trans_dt <- create_trans_dt(tmat)
+  
+  # Parameters for each transition
+  get_scale <- function(shape, mean) {
+    scale <- mean/(gamma(1 + 1/shape))
+    scale_ph <- scale^{-shape}
+    return(scale_ph)
+  }
+  
+  matrixv <- function(v) {
+    x <- matrix(v); colnames(x) <- "intercept"
+    return(x)
+  }
+  
+  params_wei <- function(shape, mean,
+                         beta_new1 = log(1), 
+                         beta_new2 = log(1),
+                         beta_age, beta_female, beta_bmi){
+    log_shape <- matrixv(log(shape))
+    scale = get_scale(shape, mean)
+    beta_intercept <- log(scale) - mean(data$age) * beta_age - mean(data$gender)* beta_female - mean(data$BMI)* beta_bmi
+    scale_coefs <-  matrix(c(beta_intercept, beta_new1, beta_new2, 
+                             beta_age, beta_female, beta_bmi), 
+                           ncol = 6)
+    colnames(scale_coefs) <- c("intercept", "new1", "new2", "age", "gender", "BMI")
+    params_surv(coefs = list(shape = log_shape,
+                             scale = scale_coefs),
+                dist = "weibullPH")
+  }
+  
+  mstate_params <- params_surv_list(
+    
+    # 1. S -> P
+    params_wei(shape = 2, mean = 50, 
+               beta_new1 = log(.7), beta_new2 = log(.6),
+               beta_female = log(1.4), beta_age = log(1.03), beta_bmi = log(1.5)),
+    
+    # 2. S -> D
+    params_wei(shape = 25, mean = 1000,
+               beta_new1 = log(.85), beta_new2 = log(.75),
+               beta_female = log(1.2), beta_age = log(1.02), beta_bmi = log(1.5)),
+    
+    # 3. P -> D
+    params_wei(shape = 3.5, mean = 50, beta_new1 = log(1),
+               beta_female = log(1.3), beta_age = log(1.02),  beta_bmi = log(1.5))
+  )
+  
+  # Create multi-state model
+  mstatemod <- create_IndivCtstmTrans(mstate_params, 
+                                      input_data = data,
+                                      trans_mat = tmat,
+                                      clock = "reset",
+                                      start_age = data$age)
+  
+  # Simulate data
+  ## Observed "latent" transitions
+  sim <- mstatemod$sim_disease(max_age = 100)
+  sim[, c("sample", "grp_id", "strategy_id") := NULL]
+  sim <- cbind(
+    data[match(sim$patient_id, data$patient_id)][, patient_id := NULL],
+    sim
+  )
+  sim[, ":=" (intercept = NULL, strategy_id = NULL, status = 1, added = 0)]
+  
+  ## Add all possible states for each transition
+  ### Observed 1->2 add 1->3
+  sim_13 <- sim[from == 1 & to == 2]
+  sim_13[, ":=" (to = 3, status = 0, final = 0,  added = 1)]
+  sim <- rbind(sim, sim_13)
+  
+  ### Observed 1->3 add 1->2
+  sim_12 <- sim[from == 1 & to == 3 & added == 0]
+  sim_12[, ":=" (to = 2, status = 0, final = 0, added = 1)]
+  sim <- rbind(sim, sim_12)
+  
+  ### Sort and clean
+  sim <- merge(sim, trans_dt, by = c("from", "to")) # Add transition ID
+  setorderv(sim, c("patient_id", "from", "to"))
+  sim[, added := NULL]
+  
+  ## Add right censoring
+  rc <- data.table(patient_id = 1:n,
+                   time = stats::rexp(n, rate = 1/15))
+  sim[, time_rc := rc[match(sim$patient_id, rc$patient_id)]$time]
+  sim[, status := ifelse(time_stop < 15 & time_stop < time_rc, status, 0)]
+  sim[, time_stop := pmin(time_stop, 15, time_rc)]
+  sim <- sim[time_start <= pmin(time_rc, 15)]
+  
+  ## Final data cleaning
+  sim[, strategy_id := fcase(
+    strategy_name == "SOC", 1L,
+    strategy_name == "New 1", 2L,
+    strategy_name == "New 2", 3L
+  )]
+  sim[, strategy_name := factor(strategy_id, 
+                                levels = c(1, 2, 3),
+                                labels = c("SOC", "New 1", "New 2"))]
+  label_states <- function (x) {
+    fcase(
+      x == 1, "1",
+      x == 2, "2",
+      x == 3, "3"
+    )
+  }
+  sim[, from := label_states(from)]
+  sim[, to := label_states(to)]
+  sim[, c("new1", "new2", "final", "time_rc") := NULL]
+  
+  # Return
+  sim[, time := time_stop - time_start]
+  return(sim[, ])
+}
+onc3 <- sim_onc3_data(n = 200000, seed = 102)
 
-  
-  ## Add censoring variables
-  dat.mstate.temp.noNA[(ncol(dat.mstate.temp)+1):(ncol(dat.mstate.temp)*2)] <- matrix(0, ncol = ncol(dat.mstate.temp), nrow = nrow(dat.mstate.temp))
+# Check that coefficient estimates are consistent with "truth"
+fit_weibull <- function(i) {
+  flexsurvreg(Surv(time, status) ~ gender + age + BMI,
+              data = onc3, subset = (transition_id == i), dist = "weibullPH")
+}
+fit_weibull(1)
+fit_weibull(2)
+fit_weibull(3)
 
-  colnames(dat.mstate.temp.noNA)[4:6] <- 
-    paste0("state", 1:3, ".s")
-  
-  
-  ## If it is not an NA value (from original dataset), set the censoring indicator to 1
-    dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,2]),(2+ncol(dat.mstate.temp))] <- 1
-    dat.mstate.temp.noNA[!is.na(dat.mstate.temp[,3]),(3+ncol(dat.mstate.temp))] <- 1
-  
-  ## Rename dataset to what it was before, and remove excess dataset
-  dat.mstate.temp <- dat.mstate.temp.noNA
-  
-  ## Now need to add baseline data
-  dat.mstate.temp$age <- cohort.out$age
-  dat.mstate.temp$gender <- cohort.out$gender
-  dat.mstate.temp$BMI <- cohort.out$BMI
-  dat.mstate.temp$patid <- cohort.out$patid
-  
-  ### Now we can use msprep from the mstate package to turn into wide format
-  ## First create a transition matrix corresponding to the columns
-  tmat <- trans.illdeath()
+# Panel data version -----------------------------------------------------------
+onc3p <- copy(onc3)
+onc3p[, n := 1:.N, by = c("patient_id", "time_start")]
+onc3p[, c("transition_id", "time") := NULL]
 
-  ## Now can prepare the data into wide format
-  dat.mstate.temp.wide <- msprep(dat.mstate.temp, trans = tmat, 
-                                 time = c(NA, paste0("state", 2:3)),
-                                 status = c(NA, paste0("state", 2:3, ".s")), 
-                                 keep = c("age","gender", "BMI","patid"))
-  
-  ## Want to expand the covariates to allow different covariate effects per transition
-  covs <- c("age", "gender", "BMI")
-  dat.mstate.temp.wide <- expand.covs(dat.mstate.temp.wide, covs, longnames = FALSE)
-  dat.mstate.temp.wide
-  
-})
+# Time 0
+onc3p_t0 <- onc3p[time_start == 0 & n == 1]
+onc3p_t0[, c("time_stop", "n", "to", "status") := NULL]
+setnames(onc3p_t0, c("time_start", "from"), c("time", "state"))
 
+# Time > 0
+onc3p[, mstatus := mean(status), by = c("patient_id", "time_start")]
+onc3p <- onc3p[status == 1 | (mstatus == 0 & n == 1)]
+onc3p[, state := ifelse(mstatus == 0, from, to)]
+onc3p[, c("time_start", "n", "from",
+          "to", "status", "mstatus") := NULL]
+setnames(onc3p, "time_stop", "time")
 
+# Full panel
+onc3p <- rbind(onc3p_t0, onc3p)
+setorderv(onc3p, c("patient_id", "time"))
+onc3p[, state_id := factor(
+  state, 
+  levels = c("1", "2", "3"),
+  labels = 1:3)]
 
-end_time_fit_parallel <- Sys.time()
-diff_fit_parallel <- start_time_fit_parallel - end_time_fit_parallel
-stopCluster(cl)
-print("FINISH DATA GEN")
-diff_fit_parallel
+onc3 <- onc3[,-c(3,11)]
+colnames(onc3) <- c("from","to","gender","age","BMI","id","Tstart","Tstop","status","trans","time")
 
-### Combine data into one data frame
-temp.data.cohort <- rbind(data_parallel_list[[1]],data_parallel_list[[2]],data_parallel_list[[3]],data_parallel_list[[4]],data_parallel_list[[5]])
-### Assign patient ID's and remove rownames
-temp.data.cohort$patid <- 1:nrow(temp.data.cohort)
-rownames(temp.data.cohort) <- NULL
-
-save(temp.data.cohort, file="3state.Rdata")
+nrow(subset(onc3, from ==1 & to == 3))
+nrow(subset(onc3, from ==1 & to ==2))
+nrow(subset(onc3, from ==2 & to ==3))
