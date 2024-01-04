@@ -30,8 +30,7 @@ library(hdnom)
 library(parallel)
 library(penalized)
 library(doParallel)
-msdat <- temp.data.cohort
-
+msdat <- state3
 
 msdat$entry <- msdat$Tstart
 msdat$exit <- msdat$Tstop
@@ -67,15 +66,16 @@ n_trans <- max(tmat, na.rm = TRUE)
 
 fits_wei <- vector(mode = "list", length = n_trans)
 
-s <- 1 - (length(noShrinkSimp$coefficients) / 2267749)
+
+s <- 1 - (length(noShrinkSimp$coefficients) / 410294)
 
 # fits models subsetting data on the number of transitions
-for (i in 1:n_trans) {
+for (i in 1:as.numeric(n_trans)) {
   fits_wei[[i]] <-
     coxph(
       Surv(entry, exit, event) ~ factor(gender) + factor(age) + BMI,
       method = "breslow",
-      data = subset(msdat, trans == i)
+      data = msdat, subset = trans==i
     )
 }
 
@@ -121,10 +121,12 @@ lassoSimp <- final_model
 ###################################
 
 # The reduced rank 2 solution
+attr(msdat, "trans") <- tmat
+
 rr2 <-
   redrank(
     Surv(Tstart, Tstop, status) ~  as.factor(gender) + as.factor(age) + BMI,
-    data = na.exclude(msdat),
+    data = msdat,
     R = 2
   )
 

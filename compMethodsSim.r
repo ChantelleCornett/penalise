@@ -186,3 +186,5 @@ colnames(onc3) <- c("from","to","gender","age","BMI","id","Tstart","Tstop","stat
 nrow(subset(onc3, from ==1 & to == 3))
 nrow(subset(onc3, from ==1 & to ==2))
 nrow(subset(onc3, from ==2 & to ==3))
+
+state3 <- onc3
