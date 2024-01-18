@@ -73,9 +73,9 @@ s <- 1 - (length(noShrinkSimp$coefficients) / 410294)
 for (i in 1:as.numeric(n_trans)) {
   fits_wei[[i]] <-
     coxph(
-      Surv(entry, exit, event) ~ factor(gender) + factor(age) + BMI,
+      Surv(entry, exit, event) ~  gender + age + BMI,
       method = "breslow",
-      data = msdat, subset = trans==i
+      data = subset(msdat, trans == i)
     )
 }
 
@@ -89,8 +89,10 @@ for (i in 1:n_trans) {
 ###################################
 ##  LASSO PENALISED LIKELIHOOD   ##
 ###################################
+library(hdnom)
+fit <- fit_lasso(x=X, y=Surv(msdat$time,msdat$event), nfolds = 5, rule = "lambda.1se", seed = c(11))
 
-X <- msdat[, c("trans", "gender", "age", "BMI")]
+X <- msdat[, c("gender", "age", "BMI")]
 y <- cbind(time = msdat$Tstop, status = msdat$status)
 cvfit <-
   cv.glmnet(
@@ -110,7 +112,6 @@ final_model <-
     y = y,
     family = "cox",
     data = msdat,
-    lambda = 0.007408425,
     alpha = 1
   )
 lassoSimp <- final_model
@@ -125,7 +126,7 @@ attr(msdat, "trans") <- tmat
 
 rr2 <-
   redrank(
-    Surv(Tstart, Tstop, status) ~  as.factor(gender) + as.factor(age) + BMI,
+    Surv(Tstart, Tstop, status) ~  as.factor(gender)+ as.factor(age) + BMI,
     data = msdat,
     R = 2
   )
@@ -142,11 +143,13 @@ rr2$loglik
 model_covshrink <- bf(
   exit | cens(1 - status) ~ base + cand,
   base ~ 1,
-  cand ~ strata(trans) + gender * factor(trans) + age *
-    factor(trans),
+  cand ~ gender  + age + BMI,
   nl = TRUE
 )
-get_prior(model_covshrink, data = msdat)
+
+msdat1 <- subset(msdat, trans == 1)
+msdat1$exit <- msdat1$Tstop
+get_prior(model_covshrink, data = msdat1)
 
 prior_covshrink <-
   prior(normal(0, 2), coef = "Intercept", nlpar = "base") +
@@ -165,7 +168,7 @@ prior_covshrink <-
 fit <-
   brm(
     model_covshrink,
-    data = msdat,
+    data = msdat1,
     family = brms::cox(),
     chains = 2,
     warmup = 1000,

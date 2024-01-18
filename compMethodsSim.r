@@ -148,7 +148,7 @@ onc3 <- sim_onc3_data(n = 200000, seed = 102)
 # Check that coefficient estimates are consistent with "truth"
 fit_weibull <- function(i) {
   flexsurvreg(Surv(time, status) ~ gender + age + BMI,
-              data = onc3, subset = (transition_id == i), dist = "weibullPH")
+              data = subset(onc3, trans== i), dist = "weibullPH")
 }
 fit_weibull(1)
 fit_weibull(2)
