@@ -51,7 +51,32 @@ noShrinkSimp <-
     method = "breslow",
     x = TRUE
   )
+mssub1 <- subset(msdat, trans == 1)
+mssub2 <- subset(msdat, trans == 2)
+mssub3 <- subset(msdat, trans == 3)
+noShrink_wei <- vector(mode = "list", length = n_trans)
 
+  noShrink_wei[[1]] <-
+    coxph(
+      Surv(entry, exit, event) ~  gender + age + BMI,
+      method = "breslow",
+      data = subset(msdat, trans == 1)
+    )
+
+  noShrink_wei[[2]] <-
+    coxph(
+      Surv(entry, exit, event) ~  gender + age + BMI,
+      method = "breslow",
+      data = subset(msdat, trans == 2)
+    )
+  
+  noShrink_wei[[3]] <-
+    coxph(
+      Surv(entry, exit, event) ~  gender + age + BMI,
+      method = "breslow",
+      data = subset(msdat, trans == 3)
+    )
+  
 # not assuming PH - need to do!
 
 ###################################
@@ -70,21 +95,38 @@ fits_wei <- vector(mode = "list", length = n_trans)
 s <- 1 - (length(noShrinkSimp$coefficients) / 410294)
 
 # fits models subsetting data on the number of transitions
-for (i in 1:as.numeric(n_trans)) {
-  fits_wei[[i]] <-
+
+  fits_wei[[1]] <-
     coxph(
       Surv(entry, exit, event) ~  gender + age + BMI,
       method = "breslow",
-      data = subset(msdat, trans == i)
+      data = subset(msdat, trans == 1)
     )
-}
 
-for (i in 1:n_trans) {
+  fits_wei[[2]] <-
+    coxph(
+      Surv(entry, exit, event) ~  gender + age + BMI,
+      method = "breslow",
+      data = subset(msdat, trans == 2)
+    )
+  fits_wei[[3]] <-
+    coxph(
+      Surv(entry, exit, event) ~  gender + age + BMI,
+      method = "breslow",
+      data = subset(msdat, trans == 3)
+    )
+
+
   for (j in 1:4) {
-    fits_wei[[i]]$coefficients[j] <- fits_wei[[i]]$coefficients[j] * s
+    fits_wei[[1]]$coefficients[j] <- fits_wei[[1]]$coefficients[j] * s
   }
-}
 
+  for (j in 1:4) {
+    fits_wei[[2]]$coefficients[j] <- fits_wei[[2]]$coefficients[j] * s
+  }
+  for (j in 1:4) {
+    fits_wei[[3]]$coefficients[j] <- fits_wei[[3]]$coefficients[j] * s
+  }
 
 ###################################
 ##  LASSO PENALISED LIKELIHOOD   ##
