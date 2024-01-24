@@ -100,31 +100,31 @@ s <- 1 - (length(noShrinkSimp$coefficients) / 410294)
     coxph(
       Surv(entry, exit, event) ~  gender + age + BMI,
       method = "breslow",
-      data = subset(msdat, trans == 1)
+      data = mssub1
     )
 
   fits_wei[[2]] <-
     coxph(
       Surv(entry, exit, event) ~  gender + age + BMI,
       method = "breslow",
-      data = subset(msdat, trans == 2)
+      data = mssub2
     )
   fits_wei[[3]] <-
     coxph(
       Surv(entry, exit, event) ~  gender + age + BMI,
       method = "breslow",
-      data = subset(msdat, trans == 3)
+      data = mssub3
     )
 
 
-  for (j in 1:4) {
+  for (j in 1:3) {
     fits_wei[[1]]$coefficients[j] <- fits_wei[[1]]$coefficients[j] * s
   }
 
-  for (j in 1:4) {
+  for (j in 1:3) {
     fits_wei[[2]]$coefficients[j] <- fits_wei[[2]]$coefficients[j] * s
   }
-  for (j in 1:4) {
+  for (j in 1:3) {
     fits_wei[[3]]$coefficients[j] <- fits_wei[[3]]$coefficients[j] * s
   }
 
