@@ -132,10 +132,10 @@ s <- 1 - (length(noShrinkSimp$coefficients) / 410294)
 ##  LASSO PENALISED LIKELIHOOD   ##
 ###################################
 library(hdnom)
-fit <- fit_lasso(x=X, y=Surv(msdat$time,msdat$event), nfolds = 5, rule = "lambda.1se", seed = c(11))
-
 X <- msdat[, c("gender", "age", "BMI")]
 y <- cbind(time = msdat$Tstop, status = msdat$status)
+fit_las <- fit_lasso(x=X, y=Surv(msdat$time,msdat$event), nfolds = 5, rule = "lambda.1se", seed = c(11))
+
 cvfit <-
   cv.glmnet(
     x = X,
@@ -211,7 +211,7 @@ fit <-
   brm(
     model_covshrink,
     data = msdat1,
-    family = brms::cox(),
+    family = brms::weibull,
     chains = 2,
     warmup = 1000,
     seed = 123,
