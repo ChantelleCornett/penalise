@@ -62,5 +62,8 @@ BMI <- rnorm(200000, mean = 24, sd = 3)
 
 pre5state <- cbind(id,test, gender, age, BMI)
 new <- as.data.frame(pre5state)
-new <- na.omit(new)
-state5 <- msprep(data=as.data.frame(new), trans = tmat, time = c("H","I","II","III","D"), status = c("H.s","I.s","II.s","III.s","D.s"), keep = new[,10:12],id="id")
+state5 <- msprep(data=as.data.frame(new), trans = tmat, time = c("H","I","II","III","D"), status = c("H.s","I.s","II.s","III.s","D.s"),id="id")
+
+# merge characteristics back on
+
+allstate5 <- merge(pre5state[,c(1,12,13,14)], state5,by=c("id"))

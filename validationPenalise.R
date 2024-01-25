@@ -278,7 +278,7 @@ validWei3 <- subset(state3valid, trans == 3)
 
 validWei3$from <- as.numeric(validWei3$from)
 validWei3$to <- as.numeric(validWei3$to)
-fit_cox <- coxph(Surv(time, status) ~ 1 ,data = msdat, subset = trans==3, method = "breslow")
+fit_cox <- coxph(Surv(time, status) ~ 1 ,data = state3valid1, method = "breslow")
 cumHaz<- basehaz(fit_cox)
 cumHaz <- cumHaz[,c(2,1)]
 
@@ -304,10 +304,9 @@ pred_validate(
 
 #### LASSO PENALISED LIKELIHOOD ####
 
-
 state3valid$from <- as.numeric(state3valid$from)
 state3valid$to <- as.numeric(state3valid$to)
-fit_cox <- coxph(Surv(time, status) ~ 1 ,data = msdat, method = "breslow")
+fit_cox <- coxph(Surv(time, status) ~ 1 ,data = validWei1, method = "breslow")
 cumHaz<- basehaz(fit_cox)
 cumHaz <- cumHaz[,c(2,1)]
 ##########################################
