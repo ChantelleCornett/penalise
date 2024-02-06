@@ -131,30 +131,39 @@ s <- 1 - (length(noShrinkSimp$coefficients) / 410294)
 ###################################
 ##  LASSO PENALISED LIKELIHOOD   ##
 ###################################
-library(hdnom)
-X <- msdat[, c("gender", "age", "BMI")]
-y <- cbind(time = msdat$Tstop, status = msdat$status)
-fit_las <- fit_lasso(x=X, y=Surv(msdat$time,msdat$event), nfolds = 5, rule = "lambda.1se", seed = c(11))
 
-cvfit <-
-  cv.glmnet(
-    x = X,
-    y = y,
-    family = "cox",
-    type.measure = "C",
-    data = msdat,
-    parallel = TRUE,
-    alpha = 1
+install.packages("/Users/m13477cc/R/Penalise/penalise/brms-2.19.0.tar", repos=NULL, type="source")
+library(brms)
+model_covshrinklas <- bf(
+  time | cens(1 - status) ~ base + cand,
+  base ~ 1,
+  cand ~ gender  + age + BMI,
+  nl = TRUE
+)
+
+msdat1 <- subset(msdat, trans == 1)
+msdat1$exit <- msdat1$Tstop
+get_prior(model_covshrink, data = msdat1)
+
+prior_covshrinklas <-
+  prior(normal(0, 2), coef = "Intercept", nlpar = "base") +
+  prior(
+    lasso(
+    ),
+    class = "b",
+    nlpar = "cand"
   )
 
-coef(cvfit, s = 'lambda.min')
-final_model <-
-  glmnet(
-    x = X,
-    y = y,
-    family = "cox",
-    data = msdat,
-    alpha = 1
+fitlas <-
+  brms::brm(
+    model_covshrinklas,
+    data = msdat1,
+    family = brms::weibull,
+    chains = 2,
+    warmup = 1500,
+    seed = 123,
+    prior = prior_covshrinklas,
+    control = list(max_treedepth = 20) 
   )
 lassoSimp <- final_model
 
@@ -183,7 +192,7 @@ rr2$loglik
 ##      BAYESIAN APPROACH        ##
 ###################################
 model_covshrink <- bf(
-  exit | cens(1 - status) ~ base + cand,
+  time | cens(1 - status) ~ base + cand,
   base ~ 1,
   cand ~ gender  + age + BMI,
   nl = TRUE
@@ -207,13 +216,14 @@ prior_covshrink <-
     nlpar = "cand"
   )
 
-fit <-
+fit1 <-
   brm(
     model_covshrink,
     data = msdat1,
     family = brms::weibull,
     chains = 2,
-    warmup = 1000,
+    warmup = 1500,
     seed = 123,
-    prior = prior_covshrink
+    prior = prior_covshrink,
+    control = list(max_treedepth = 20) 
   )

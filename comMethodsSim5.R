@@ -1,5 +1,4 @@
 library("mstate")
-devtools::install_github("hputter/mstate")
 library("markovMSM")
 tmat <- mstate::transMat(x = list(c(2, 5), 
                                   c(3, 5), 
@@ -11,6 +10,9 @@ tmat <- mstate::transMat(x = list(c(2, 5),
 print(tmat)
 
 data(ebmt4)
+
+((((((()))))))
+
 
 id <- seq(1,200000,1)
 H <- rep(times =200000, 0)

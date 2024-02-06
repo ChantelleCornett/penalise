@@ -353,6 +353,25 @@ pred_validate(
   survival_time = time,
   event_indicator = status,
   time_horizon = NULL,
-  cal_plot = TRUE,
-  ...
+  cal_plot = TRUE
 )
+
+##########################
+
+#### REDUCED RANK ####
+
+rr2preds <- predict(rr2$cox.itr1, type = "survival")
+rr2predslp <- predict(rr2$cox.itr1, type = "lp")
+cloglog <- log(-log(1 - rr2preds))
+
+plot_df <- data.frame(msdat$time,
+                      rr2preds,
+                      rr2predslp,
+                      cloglog)
+
+vcal <- survival::coxph(msdat$time ~ splines::ns(cloglog,3,knots=seq(0,2,length=3)),
+                        data = plot_df)
+
+bh <- survival::basehaz(vcal)
+
+plot_df$observed_risk <- 1 - (exp(-bh[(max(which(bh[,2] <= 15))),1])^(exp(stats::predict(vcal, type = "lp"))))
