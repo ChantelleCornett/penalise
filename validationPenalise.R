@@ -213,49 +213,72 @@ colnames(state3valid) <- c("from","to","BMI","id","Tstart","Tstop","status","tra
 
 #### UNIFORM SHRINKAGE ####
 
-# Need to put into the correct form for model_info
-validWei1 <- subset(state3valid, trans == 1)
+library(survival)
+validWei1 <- subset(state3valid, (from == 1& to == 2))
+library(flexsurv)
 
-validWei1$from <- as.numeric(validWei1$from)
-validWei1$to <- as.numeric(validWei1$to)
-fit_cox <- coxph(Surv(time, status) ~ 1 ,data = msdat, subset = trans==1, method = "breslow")
-cumHaz<- basehaz(fit_cox)
-cumHaz <- cumHaz[,c(2,1)]
+########### NO PEN 1 #################
+validNoPen1 <- coxph(Surv(time) ~ offset(0.0052630*age + 0.0201146 * BMI + 0.0209758*gender), data=validWei1)
 
-fitsWei1_mi <- as.data.frame(t(fits_wei[[1]][["coefficients"]]))
+# Calibration plots
+library(survival)
+library(predtools)
+library(probably)
+library(timeROC)
+validWei1$prednp1 <- predict(validNoPen1, data = validWei1, type = "survival")
+real <- coxph(Surv(time) ~ 1, data = validWei1)
+validWei1$realprobs <- predict(real, data= validWei1)
+validWei1$predtime <- predict(real, data= validWei1, type="survival")
+cal_plot_regression(validWei1, truth = "realprobs", estimate = "prednp1", smooth = TRUE)
+rocnp1 <- timeROC(T=validWei1$time[1:200],cause = 1, delta = validWei1$status[1:200], marker=validWei1$realprobs[1:200], times = c(15),iid=TRUE)
+plotAUCcurve(rocnp1,add = TRUE, conf.int = FALSE,conf.band = FALSE, col = "red")
+########### NO PEN 2 #################
+validNoPen2 <- coxph(Surv(time) ~ offset(0.0052630*age + 0.0201146 * BMI + 0.0209758*gender), data=validWei2)
+validWei2$prednp2 <- predict(validNoPen2, data = validWei2, type = "survival")
+real2 <- coxph(Surv(time) ~ 1, data = validWei2)
+validWei2$realprobs <- predict(real2, data= validWei2, type="survival")
+cal_plot_regression(validWei2, truth = "realprobs", estimate = "prednp2", smooth = TRUE)
+########### NO PEN 3 #################
+validNoPen3 <- coxph(Surv(time) ~ offset(-0.007113*age - 0.021970* BMI -0.030273*gender), data=validWei3)
+validWei3$prednp3 <- predict(validNoPen3, data = validWei3, type = "survival")
+real3 <- coxph(Surv(time) ~ 1, data = validWei3)
+validWei3$realprobs <- predict(real3, data= validWei3, type="survival")
+cal_plot_regression(validWei3, truth = "realprobs", estimate = "prednp3", smooth = TRUE)
+############# G SHRINK 1 ###############
+validGShrink1 <- coxph(Surv(time) ~ offset(0.0052407*age + 0.0200295 * BMI + 0.02088871*gender), data=validWei1)
+validWei1$predgs1 <- predict(validGShrink1, data = validWei1, type = "survival")
+realg1<- coxph(Surv(time) ~ 1, data = validWei1)
+validWei1$gprobs <- predict(realg1, data= validWei1, type="survival")
+cal_plot_regression(validWei1, truth = "gprobs", estimate = "predgs1", smooth = TRUE)
+############# G SHRINK 2 ###############
+validGShrink2 <- coxph(Surv(time) ~ offset(0.0052185*age + 0.0199448 * BMI + 0.0207987*gender), data=validWei2)
+validWei2$predgs2 <- predict(validGShrink2, data = validWei2, type = "survival")
+realg2<- coxph(Surv(time) ~ 1, data = validWei2)
+validWei2$gprobs <- predict(realg2, data= validWei2, type="survival")
+cal_plot_regression(validWei2, truth = "gprobs", estimate = "predgs2", smooth = TRUE)
+############# G SHRINK 3 ###############
+validGShrink3 <- coxph(Surv(time) ~ offset(-0.006149*age - 0.018992 * BMI -0.06170*gender), data=validWei3)
+validWei3$predgs3 <- predict(validGShrink3, data = validWei3, type = "survival")
+realg3<- coxph(Surv(time) ~ 1, data = validWei3)
+validWei3$gprobs <- predict(realg3, data= validWei3, type="survival")
+cal_plot_regression(validWei3, truth = "gprobs", estimate = "predgs3", smooth = TRUE)
+############# LASSO 1 ###############
+validLAS1 <- coxph(Surv(time) ~ offset(0.005216672*age + 0.018911185 * BMI + 0.019396405*gender), data=validWei1)
 
-colnames(fitsWei1_mi) <- c("gender","twentyToForty","greaterForty","BMI")
+############# LASSO 2 ###############
+validLAS2 <- coxph(Surv(time) ~ offset(0.005216672*age + 0.018911185 * BMI + 0.019306405*gender), data=validWei2)
 
-# validation for transition from healthy to ill
-x <- pred_input_info(
-  model_type = "survival",
-  model_info = fitsWei1_mi,
-  cum_hazard = cumHaz
-) 
+############# LASSO 3 ###############
+validLAS3 <- coxph(Surv(time) ~ offset(-0.004146397*age -0.021360847* BMI -0.014194088*gender), data=validWei3)
 
-pred_validate(
-  x=x,
-  new_data = validWei1,
-  binary_outcome =NULL,
-  survival_time = "time",
-  event_indicator = "status",
-  time_horizon = 15,
-  cal_plot = TRUE
-)
-
-# validation for transition from healthy to dead
-validWei2 <- subset(state3valid, trans == 2)
 
 validWei2$from <- as.numeric(validWei2$from)
 validWei2$to <- as.numeric(validWei2$to)
-fit_cox <- coxph(Surv(time, status) ~ 1 ,data = msdat, subset = trans==2, method = "breslow")
-cumHaz<- basehaz(fit_cox)
+cumHaz<- basehaz(fits_wei[[2]], centered = FALSE)
 cumHaz <- cumHaz[,c(2,1)]
 
 fitsWei2_mi <- as.data.frame(t(fits_wei[[2]][["coefficients"]]))
-
-colnames(fitsWei2_mi) <- c("gender","twentyToForty","greaterForty","BMI")
-
+library(predRupdate)
 x <- pred_input_info(
   model_type = "survival",
   model_info = fitsWei2_mi,
@@ -272,20 +295,16 @@ pred_validate(
   cal_plot = TRUE
 )
 
-
 # validation for transition from ill to dead
-validWei3 <- subset(state3valid, trans == 3)
+validWei3 <- subset(state3valid, from == 2 & to==3)
 
 validWei3$from <- as.numeric(validWei3$from)
 validWei3$to <- as.numeric(validWei3$to)
-fit_cox <- coxph(Surv(time, status) ~ 1 ,data = state3valid1, method = "breslow")
-cumHaz<- basehaz(fit_cox)
+cumHaz<- basehaz(fits_wei[[3]], centered = FALSE)
 cumHaz <- cumHaz[,c(2,1)]
 
 fitsWei3_mi <- as.data.frame(t(fits_wei[[3]][["coefficients"]]))
-
-colnames(fitsWei3_mi) <- c("gender","twentyToForty","greaterForty","BMI")
-
+library(predRupdate)
 x <- pred_input_info(
   model_type = "survival",
   model_info = fitsWei3_mi,
@@ -298,80 +317,6 @@ pred_validate(
   binary_outcome =NULL,
   survival_time = "time",
   event_indicator = "status",
-  time_horizon = 15,
+  time_horizon = cumHaz$time[44584],
   cal_plot = TRUE
 )
-
-#### LASSO PENALISED LIKELIHOOD ####
-
-state3valid$from <- as.numeric(state3valid$from)
-state3valid$to <- as.numeric(state3valid$to)
-fit_cox <- coxph(Surv(time, status) ~ 1 ,data = validWei1, method = "breslow")
-cumHaz<- basehaz(fit_cox)
-cumHaz <- cumHaz[,c(2,1)]
-##########################################
-lassoList <- c()
-for (i in 1:length(lassoSimp$beta)){
-  lassoList <- c(lassoList, lassoSimp$beta[i])
-}
-lasso_mi <- as.data.frame(t(lassoList))
-
-colnames(lasso_mi) <- c("gender","age","BMI")
-
-x <- pred_input_info(
-  model_type = "survival",
-  model_info = lasso_mi,
-  cum_hazard = cumHaz
-) 
-
-pred_validate(
-  x=x,
-  new_data = state3valid,
-  binary_outcome =NULL,
-  survival_time = "time",
-  event_indicator = "status",
-  time_horizon = 15,
-  cal_plot = TRUE
-)
-
-#### MLE NO SHRINKAGE ####
-
-noShrinkSimp_mi <- as.data.frame(t(noShrinkSimp[["coefficients"]]))
-
-colnames(noShrinkSimp_mi) <- c("gender","twentyToForty","greaterForty","age","BMI","gender:twentyToForty","gender:greaterForty","age:twentyToForty","age:greaterForty", "BMI:twentyToForty","BMI:greaterForty")
-
-x <- pred_input_info(
-  model_type = "survival",
-  model_info = noShrinkSimp_mi,
-  cum_hazard = NULL
-) 
-
-pred_validate(
-  x=x,
-  new_data = state3valid,
-  binary_outcome = NULL,
-  survival_time = time,
-  event_indicator = status,
-  time_horizon = NULL,
-  cal_plot = TRUE
-)
-
-##########################
-
-#### REDUCED RANK ####
-
-rr2preds <- predict(rr2$cox.itr1, type = "survival")
-rr2predslp <- predict(rr2$cox.itr1, type = "lp")
-cloglog <- log(-log(1 - rr2preds))
-
-plot_df <- data.frame(msdat$time,
-                      rr2preds,
-                      rr2predslp,
-                      cloglog)
-
-vcal <- survival::coxph(msdat$time ~ splines::ns(cloglog,3,knots=seq(0,2,length=3)),
-                        data = plot_df)
-
-bh <- survival::basehaz(vcal)
-
-plot_df$observed_risk <- 1 - (exp(-bh[(max(which(bh[,2] <= 15))),1])^(exp(stats::predict(vcal, type = "lp"))))

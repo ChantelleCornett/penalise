@@ -30,6 +30,8 @@ library(hdnom)
 library(parallel)
 library(penalized)
 library(doParallel)
+library(flexsurv)
+library(ggplot2)
 msdat <- state3
 
 msdat$entry <- msdat$Tstart
@@ -56,28 +58,31 @@ mssub2 <- subset(msdat, trans == 2)
 mssub3 <- subset(msdat, trans == 3)
 noShrink_wei <- vector(mode = "list", length = n_trans)
 
-  noShrink_wei[[1]] <-
+  noShrink_wei[[1]]<-
     coxph(
-      Surv(entry, exit, event) ~  gender + age + BMI,
+      Surv(time) ~  gender + age + BMI ,
+      data = msdat1,
       method = "breslow",
-      data = subset(msdat, trans == 1)
+      x = TRUE
     )
+    
 
   noShrink_wei[[2]] <-
     coxph(
-      Surv(entry, exit, event) ~  gender + age + BMI,
+      Surv(time) ~  gender + age + BMI ,
+      data = msdat2,
       method = "breslow",
-      data = subset(msdat, trans == 2)
+      x = TRUE
     )
   
   noShrink_wei[[3]] <-
     coxph(
-      Surv(entry, exit, event) ~  gender + age + BMI,
+      Surv(time) ~  gender + age + BMI ,
+      data = msdat3,
       method = "breslow",
-      data = subset(msdat, trans == 3)
+      x = TRUE
     )
   
-# not assuming PH - need to do!
 
 ###################################
 ##     UNIFORM SHRINKAGE         ##
@@ -90,83 +95,121 @@ tmat <- trans.illdeath()
 n_trans <- max(tmat, na.rm = TRUE)
 
 fits_wei <- vector(mode = "list", length = n_trans)
+fits_wei[[1]]<-
+  coxph(
+    Surv(time) ~  gender + age + BMI ,
+    data = msdat1,
+    method = "breslow",
+    x = TRUE
+  )
 
+fits_wei[[2]] <-
+  coxph(
+    Surv(time) ~  gender + age + BMI ,
+    data = msdat2,
+    method = "breslow",
+    x = TRUE
+  )
 
-s <- 1 - (length(noShrinkSimp$coefficients) / 410294)
+fits_wei[[3]] <-
+  coxph(
+    Surv(time) ~  gender + age + BMI ,
+    data = msdat3,
+    method = "breslow",
+    x = TRUE
+  )
 
+s1 <- 1 - (length(fits_wei[[1]]$coefficients) / 709.3)
+s2 <- 1 - (length(fits_wei[[2]]$coefficients) / 709.3)
+s3 <- 1 - (length(fits_wei[[3]]$coefficients) / 42.71)
 # fits models subsetting data on the number of transitions
 
-  fits_wei[[1]] <-
-    coxph(
-      Surv(entry, exit, event) ~  gender + age + BMI,
-      method = "breslow",
-      data = mssub1
-    )
-
-  fits_wei[[2]] <-
-    coxph(
-      Surv(entry, exit, event) ~  gender + age + BMI,
-      method = "breslow",
-      data = mssub2
-    )
-  fits_wei[[3]] <-
-    coxph(
-      Surv(entry, exit, event) ~  gender + age + BMI,
-      method = "breslow",
-      data = mssub3
-    )
-
-
   for (j in 1:3) {
-    fits_wei[[1]]$coefficients[j] <- fits_wei[[1]]$coefficients[j] * s
+    fits_wei[[1]]$coefficients[j] <- fits_wei[[1]]$coefficients[j] * s1
   }
 
   for (j in 1:3) {
-    fits_wei[[2]]$coefficients[j] <- fits_wei[[2]]$coefficients[j] * s
+    fits_wei[[2]]$coefficients[j] <- fits_wei[[2]]$coefficients[j] * s2
   }
   for (j in 1:3) {
-    fits_wei[[3]]$coefficients[j] <- fits_wei[[3]]$coefficients[j] * s
+    fits_wei[[3]]$coefficients[j] <- fits_wei[[3]]$coefficients[j] * s3
   }
 
 ###################################
 ##  LASSO PENALISED LIKELIHOOD   ##
 ###################################
 
-install.packages("/Users/m13477cc/R/Penalise/penalise/brms-2.19.0.tar", repos=NULL, type="source")
+install.packages("/Users/m13477cc/R/Penalise/penalise/brms-2.19.0.tar", repos=NULL, type="source", dependencies = TRUE)
 library(brms)
 model_covshrinklas <- bf(
-  time | cens(1 - status) ~ base + cand,
-  base ~ 1,
-  cand ~ gender  + age + BMI,
-  nl = TRUE
-)
+  time  ~ gender  + age + BMI, family = cox())
 
-msdat1 <- subset(msdat, trans == 1)
+
+msdat1 <- subset(msdat, (from == 1 & to == 2))
+msdat2 <- subset(msdat, (from == 1 & to == 3))
+msdat3 <- subset(msdat, from == 2 & to == 3)
 msdat1$exit <- msdat1$Tstop
-get_prior(model_covshrink, data = msdat1)
+get_prior(model_covshrinklas, data = msdat1)
 
 prior_covshrinklas <-
-  prior(normal(0, 2), coef = "Intercept", nlpar = "base") +
   prior(
     lasso(
     ),
-    class = "b",
-    nlpar = "cand"
+    class = "b"
   )
 
 fitlas <-
   brms::brm(
     model_covshrinklas,
     data = msdat1,
-    family = brms::weibull,
+    family = brms::cox,
     chains = 2,
-    warmup = 1500,
+    warmup = 2000,
+    iter = 2500,
     seed = 123,
     prior = prior_covshrinklas,
-    control = list(max_treedepth = 20) 
+    cores=2,
+    threads=2,
+    control = list(max_treedepth = 30) 
   )
-lassoSimp <- final_model
+fitlas2 <-
+  brms::brm(
+    model_covshrinklas,
+    data = msdat2,
+    family = brms::cox,
+    chains = 2,
+    warmup = 2000,
+    iter = 2500,
+    seed = 123,
+    prior = prior_covshrinklas,
+    cores=2,
+    threads=2,
+    control = list(max_treedepth = 30) 
+  )
+fitlas3 <-
+  brms::brm(
+    model_covshrinklas,
+    data = msdat3,
+    family = brms::cox,
+    chains = 2,
+    warmup = 2000,
+    iter = 2500,
+    seed = 123,
+    prior = prior_covshrinklas,
+    cores=2,
+    threads=2,
+    control = list(max_treedepth = 30) 
+  )
 
+library(tidybayes)
+msdatlas <- msdat1 %>%
+  add_residual_draws(fitlas) %>%
+  median_qi()
+
+ggplot(data=msdatlas, aes(sample = .residual)) +
+  geom_qq() +
+  geom_qq_line()+
+  geom_abline(slope=1, intercept = 0, color = "red")
 
 ###################################
 ##      REDUCED RANK METHOD      ##
