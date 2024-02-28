@@ -217,8 +217,8 @@ library(survival)
 validWei1 <- subset(state3valid, (from == 1& to == 2))
 library(flexsurv)
 
-########### NO PEN 1 #################
-validNoPen1 <- coxph(Surv(time) ~ offset(0.0052630*age + 0.0201146 * BMI + 0.0209758*gender), data=validWei1)
+########### NO PEN 2 #################
+validNoPen2 <- coxph(Surv(time) ~ offset(0.01772*age + 0.10141 * BMI -0.79066*gender), data=patient2_histories2)
 
 # Calibration plots
 library(survival)
@@ -226,32 +226,33 @@ library(predtools)
 library(probably)
 library(timeROC)
 validWei1$prednp1 <- predict(validNoPen1, data = validWei1, type = "survival")
-real <- coxph(Surv(time) ~ 1, data = validWei1)
+real <- coxph(Surv(time,status) ~ 1, data = validWei1)
 validWei1$realprobs <- predict(real, data= validWei1)
 validWei1$predtime <- predict(real, data= validWei1, type="survival")
 cal_plot_regression(validWei1, truth = "realprobs", estimate = "prednp1", smooth = TRUE)
-rocnp1 <- timeROC(T=validWei1$time[1:200],cause = 1, delta = validWei1$status[1:200], marker=validWei1$realprobs[1:200], times = c(15),iid=TRUE)
-plotAUCcurve(rocnp1,add = TRUE, conf.int = FALSE,conf.band = FALSE, col = "red")
-########### NO PEN 2 #################
-validNoPen2 <- coxph(Surv(time) ~ offset(0.0052630*age + 0.0201146 * BMI + 0.0209758*gender), data=validWei2)
+rocnp1 <- timeROC(T=validWei1$time[1:200],cause = 1, delta = validWei1$status[1:200], marker=validWei1$realprobs[1:200], times = seq(0,15, by =0.5),iid=TRUE)
+plot(rocnp1, FP = 2, add = FALSE,conf.int = FALSE,conf.band = FALSE, col = "black")
+plot(rocnp1,time=15,add = FALSE, col = "black",title=FALSE, lwd=2)
+########### NO PEN 1 #################
+validNoPen1 <- coxph(Surv(time) ~ offset(0.0047995*age + 0.0064177 * BMI -0.1096818*gender), data=patient2_histories1)
 validWei2$prednp2 <- predict(validNoPen2, data = validWei2, type = "survival")
 real2 <- coxph(Surv(time) ~ 1, data = validWei2)
 validWei2$realprobs <- predict(real2, data= validWei2, type="survival")
 cal_plot_regression(validWei2, truth = "realprobs", estimate = "prednp2", smooth = TRUE)
 ########### NO PEN 3 #################
-validNoPen3 <- coxph(Surv(time) ~ offset(-0.007113*age - 0.021970* BMI -0.030273*gender), data=validWei3)
+validNoPen3 <- coxph(Surv(time) ~ offset(-0.00008014*age -0.0002384* BMI + 0.002305*gender), data=patient2_histories3)
 validWei3$prednp3 <- predict(validNoPen3, data = validWei3, type = "survival")
 real3 <- coxph(Surv(time) ~ 1, data = validWei3)
 validWei3$realprobs <- predict(real3, data= validWei3, type="survival")
 cal_plot_regression(validWei3, truth = "realprobs", estimate = "prednp3", smooth = TRUE)
 ############# G SHRINK 1 ###############
-validGShrink1 <- coxph(Surv(time) ~ offset(0.0052407*age + 0.0200295 * BMI + 0.02088871*gender), data=validWei1)
+validGShrink1 <- coxph(Surv(time) ~ offset(0.0047939*age + 0.0064102 * BMI -0.1095531*gender), data=patient2_histories1)
 validWei1$predgs1 <- predict(validGShrink1, data = validWei1, type = "survival")
 realg1<- coxph(Surv(time) ~ 1, data = validWei1)
 validWei1$gprobs <- predict(realg1, data= validWei1, type="survival")
 cal_plot_regression(validWei1, truth = "gprobs", estimate = "predgs1", smooth = TRUE)
 ############# G SHRINK 2 ###############
-validGShrink2 <- coxph(Surv(time) ~ offset(0.0052185*age + 0.0199448 * BMI + 0.0207987*gender), data=validWei2)
+validGShrink2 <- coxph(Surv(time) ~ offset(0.003655*age + 0.020925 * BMI -0.163152*gender), data=patient2_histories2)
 validWei2$predgs2 <- predict(validGShrink2, data = validWei2, type = "survival")
 realg2<- coxph(Surv(time) ~ 1, data = validWei2)
 validWei2$gprobs <- predict(realg2, data= validWei2, type="survival")
@@ -300,14 +301,38 @@ validWei3 <- subset(state3valid, from == 2 & to==3)
 
 validWei3$from <- as.numeric(validWei3$from)
 validWei3$to <- as.numeric(validWei3$to)
-cumHaz<- basehaz(fits_wei[[3]], centered = FALSE)
+cumHaz<- basehaz(validNoPen1, centered = FALSE)
 cumHaz <- cumHaz[,c(2,1)]
 
-fitsWei3_mi <- as.data.frame(t(fits_wei[[3]][["coefficients"]]))
+validNoPen1_mi <- as.data.frame(t(c(0.313246, 0.031646, 0.401673)))
+colnames(validNoPen1_mi) <- c("gender", "age","BMI")
 library(predRupdate)
 x <- pred_input_info(
   model_type = "survival",
-  model_info = fitsWei3_mi,
+  model_info = validNoPen1_mi,
+  cum_hazard = cumHaz
+) 
+
+pred_validate(
+  x=x,
+  new_data = validWei1,
+  binary_outcome =NULL,
+  survival_time = "time",
+  event_indicator = "status",
+  time_horizon = 15,
+  cal_plot = TRUE
+)
+
+cumHaz<- basehaz(validNoPen3, centered = FALSE)
+cumHaz <- cumHaz[,c(2,1)]
+
+validNoPen3_mi <- as.data.frame(t(c(0.71741, 0.02449, 0.46039)))
+colnames(validNoPen3_mi) <- c("gender", "age","BMI")
+
+library(predRupdate)
+x <- pred_input_info(
+  model_type = "survival",
+  model_info = validNoPen3_mi,
   cum_hazard = cumHaz
 ) 
 
@@ -317,6 +342,6 @@ pred_validate(
   binary_outcome =NULL,
   survival_time = "time",
   event_indicator = "status",
-  time_horizon = cumHaz$time[44584],
+  time_horizon = cumHaz$time[1029],
   cal_plot = TRUE
 )

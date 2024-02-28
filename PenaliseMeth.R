@@ -61,16 +61,18 @@ noShrink_wei <- vector(mode = "list", length = n_trans)
   noShrink_wei[[1]]<-
     coxph(
       Surv(time) ~  gender + age + BMI ,
-      data = msdat1,
+      data = patient_histories1,
       method = "breslow",
       x = TRUE
     )
-    
+
+library(SurvMetrics)
+  
 
   noShrink_wei[[2]] <-
     coxph(
       Surv(time) ~  gender + age + BMI ,
-      data = msdat2,
+      data = patient_histories2,
       method = "breslow",
       x = TRUE
     )
@@ -78,7 +80,7 @@ noShrink_wei <- vector(mode = "list", length = n_trans)
   noShrink_wei[[3]] <-
     coxph(
       Surv(time) ~  gender + age + BMI ,
-      data = msdat3,
+      data = patient_histories3,
       method = "breslow",
       x = TRUE
     )
@@ -98,7 +100,7 @@ fits_wei <- vector(mode = "list", length = n_trans)
 fits_wei[[1]]<-
   coxph(
     Surv(time) ~  gender + age + BMI ,
-    data = msdat1,
+    data = patient_histories1,
     method = "breslow",
     x = TRUE
   )
@@ -106,7 +108,7 @@ fits_wei[[1]]<-
 fits_wei[[2]] <-
   coxph(
     Surv(time) ~  gender + age + BMI ,
-    data = msdat2,
+    data = patient_histories2,
     method = "breslow",
     x = TRUE
   )
@@ -114,14 +116,14 @@ fits_wei[[2]] <-
 fits_wei[[3]] <-
   coxph(
     Surv(time) ~  gender + age + BMI ,
-    data = msdat3,
+    data = patient_histories3,
     method = "breslow",
     x = TRUE
   )
 
-s1 <- 1 - (length(fits_wei[[1]]$coefficients) / 709.3)
-s2 <- 1 - (length(fits_wei[[2]]$coefficients) / 709.3)
-s3 <- 1 - (length(fits_wei[[3]]$coefficients) / 42.71)
+s1 <- 1 - (length(fits_wei[[1]]$coefficients) / 2557)
+s2 <- 1 - (length(fits_wei[[2]]$coefficients) / 3.78)
+s3 <- 1 - (length(fits_wei[[3]]$coefficients) / 1.2)
 # fits models subsetting data on the number of transitions
 
   for (j in 1:3) {
