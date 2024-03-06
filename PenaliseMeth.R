@@ -33,12 +33,6 @@ library(flexsurv)
 library(ggplot2)
 library(SurvMetrics)
 
-msdat <- state3
-
-msdat$entry <- msdat$Tstart
-msdat$exit <- msdat$Tstop
-msdat$event <- msdat$status
-
 ###################################
 ##.     MLE NO SHRINKAGE         ##
 ###################################
