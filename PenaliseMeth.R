@@ -40,11 +40,23 @@ library(SurvMetrics)
 # make a cox proportional hazards model with multiple outcomes
 # assumping ph
 
+patient_histories1$time2 <- 0
+for (i in 1: length(patient_histories1$time)){
+patient_histories1$time2[i] <- min(patient_histories1$time[i], patient_histories1$cens_time[i])
+}
+
+
+patient_histories1$status <- 0
+for (i in 1: length(patient_histories1$time)){
+  if (patient_histories1$cens_time[i] == patient_histories1$time2[i]){
+    patient_histories1$status[i] <- 1
+  }
+}
 noShrink_wei <- vector(mode = "list", length = n_trans)
 
 noShrink_wei[[1]] <-
   coxph(
-    Surv(time) ~  gender + age + BMI ,
+    Surv(time2,status) ~  gender + age + BMI ,
     data = patient_histories1,
     method = "breslow",
     x = TRUE

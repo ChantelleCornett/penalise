@@ -25,18 +25,30 @@ library("timeROC")
 ######################################
 ############ UNPENALIZED #############
 ######################################
-
+patient2_histories1$status <- 0
+patient2_histories2$status <- 0
+patient2_histories3$status <- 0
 ########### NO PEN 1 #################
+patient2_histories1$time2 <- 0
+for (i in 1: length(patient2_histories1$time)){
+  patient2_histories1$time2[i] <- min(patient2_histories1$time[i], patient2_histories1$cens_time[i])
+}
 
+patient2_histories1$status <- 0
+for (i in 1: length(patient2_histories1$time)){
+  if (patient2_histories1$cens_time[i] == patient2_histories1$time2[i]){
+    patient2_histories1$status[i] <- 1
+  }
+}
 validNoPen1 <-
-  coxph(Surv(time) ~ offset(0.0047995 * age + 0.0064177 * BMI - 0.1096818 *
+  coxph(Surv(time2,status) ~ offset(0.0002142 * age -0.00003723 * BMI + 0.003341 *
                               gender),
-        data = patient2_histories1)
+        data = patient2_histories1, method = "breslow")
 
 cumHaz <- basehaz(validNoPen1, centered = FALSE)
 cumHaz <- cumHaz[, c(2, 1)]
 
-validNoPen1_mi <- as.data.frame(t(c(-0.1096818, 0.0047995, 0.0064177)))
+validNoPen1_mi <- as.data.frame(t(c(0.003341, 0.0002142, -0.00003723)))
 colnames(validNoPen1_mi) <- c("gender", "age", "BMI")
 
 x <- pred_input_info(model_type = "survival",
@@ -49,7 +61,7 @@ pred_validate(
   binary_outcome = NULL,
   survival_time = "time",
   event_indicator = "status",
-  time_horizon = 15,
+  time_horizon = cumHaz$time[66856],
   cal_plot = TRUE
 )
 
